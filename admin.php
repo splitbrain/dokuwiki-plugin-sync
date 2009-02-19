@@ -73,13 +73,16 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         }else{
             echo $this->locale_xhtml('intro');
 
-            // profile management
+            echo '<div class="sync_left">';
             $this->_profilelist($this->profno);
-            $this->_profileform($this->profno);
-
             if($this->profno !=='' ){
+                echo '<br />';
                 $this->_profileView($this->profno);
             }
+            echo '</div>';
+            echo '<div class="sync_right">';
+            $this->_profileform($this->profno);
+            echo '</div>';
         }
     }
 
@@ -145,7 +148,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
 
         echo '<label for="sync__server">'.$this->getLang('server').'</label> ';
         echo '<input type="text" name="p[server]" id="sync__server" class="edit" value="'.hsc($this->profiles[$no]['server']).'" /><br />';
-        echo '<sample>http://example.com/dokuwiki/lib/exe/xmlrpc.php</sample><br />';
+        echo '<samp>http://example.com/dokuwiki/lib/exe/xmlrpc.php</samp><br />';
 
         echo '<label for="sync__ns">'.$this->getLang('ns').'</label> ';
         echo '<input type="text" name="p[ns]" id="sync__ns" class="edit" value="'.hsc($this->profiles[$no]['ns']).'" /><br />';
