@@ -42,6 +42,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
      */
     function handle() {
         if(isset($_REQUEST['p']) && is_array($_REQUEST['p'])){
+            if($this->profno === '') $this->profno = count($this->profiles);
             $this->profiles[$this->profno] = $_REQUEST['p'];
             $this->_profileSave();
         }
@@ -102,15 +103,28 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
 
     function _profileView($no){
         global $conf;
+
+        $client = new IXR_Client($this->profiles[$no]['server']);
+        $client->user = $this->profiles[$no]['user'];
+        $client->pass = $this->profiles[$no]['pass'];
+        $ok = $client->query('dokuwiki.getVersion');
+        $version = '';
+        if($ok) $version = $client->getResponse();
+
         echo '<form action="" method="post">';
         echo '<input type="hidden" name="no" value="'.hsc($no).'" />';
         echo '<fieldset><legend>'.$this->getLang('syncstart').'</legend>';
-        if($this->profiles[$no]['ltime']){
-            echo '<p>'.$this->getLang('lastsync').' '.strftime($conf['dformat'],$this->profiles[$no]['ltime']).'</p>';
+        if($version){
+            echo '<p>'.$this->getLang('remotever').' '.hsc($version).'</p>';
+            if($this->profiles[$no]['ltime']){
+                echo '<p>'.$this->getLang('lastsync').' '.strftime($conf['dformat'],$this->profiles[$no]['ltime']).'</p>';
+            }else{
+                echo '<p>'.$this->getLang('neversync').'</p>';
+            }
+            echo '<input name="startsync" type="submit" value="'.$this->getLang('syncstart').'" class="button" />';
         }else{
-            echo '<p>'.$this->getLang('neversync').'</p>';
+            echo '<p class="error">'.$this->getLang('noconnect').'<br />'.hsc($client->getErrorMessage()).'</p>';
         }
-        echo '<input name="startsync" type="submit" value="'.$this->getLang('syncstart').'" class="button" />';
         echo '</fieldset>';
         echo '</form>';
     }
@@ -182,6 +196,14 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                 echo '</div></li>';
                 continue;
             }
+            if($dir == -2){
+                //delete local
+                saveWikiText($id,'','synced',false);
+                echo '<li class="ok"><div class="li">';
+                echo $this->getLang('localdel').' '.hsc($id).' ';
+                echo '</div></li>';
+                continue;
+            }
             if($dir == -1){
                 //pull
                 $ok = $client->query('wiki.getPage',$id);
@@ -213,7 +235,21 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                 echo '<li class="ok"><div class="li">';
                 echo $this->getLang('pushok').' '.hsc($id).' ';
                 echo '</div></li>';
-
+                continue;
+            }
+            if($dir == 2){
+                // remote delete
+                $ok = $client->query('wiki.putPage',$id,'',array('sum'=>'synced'));
+                if(!$ok){
+                    echo '<li class="error"><div class="li">';
+                    echo $this->getLang('remotedelfail').' '.hsc($id).' ';
+                    echo hsc($client->getErrorMessage());
+                    echo '</div></li>';
+                    continue;
+                }
+                echo '<li class="ok"><div class="li">';
+                echo $this->getLang('remotedelok').' '.hsc($id).' ';
+                echo '</div></li>';
                 continue;
             }
         }
@@ -279,13 +315,21 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             echo '</td>';
 
             echo '<td>';
-            echo '<input type="radio" name="sync['.hsc($id).']" value="1" title="'.$this->getLang('push').'" '.(($dir == 1)?'checked="checked"':'').' />';
+            if(!isset($item['local'])){
+                echo '<input type="radio" name="sync['.hsc($id).']" value="2" title="'.$this->getLang('pushdel').'" '.(($dir == 2)?'checked="checked"':'').' />';
+            }else{
+                echo '<input type="radio" name="sync['.hsc($id).']" value="1" title="'.$this->getLang('push').'" '.(($dir == 1)?'checked="checked"':'').' />';
+            }
             echo '</td>';
             echo '<td>';
             echo '<input type="radio" name="sync['.hsc($id).']" value="0" title="'.$this->getLang('keep').'" '.(($dir == 0)?'checked="checked"':'').' />';
             echo '</td>';
             echo '<td>';
-            echo '<input type="radio" name="sync['.hsc($id).']" value="-1" title="'.$this->getLang('pull').'" '.(($dir == -1)?'checked="checked"':'').' />';
+            if(!isset($item['remote'])){
+                echo '<input type="radio" name="sync['.hsc($id).']" value="-2" title="'.$this->getLang('pulldel').'" '.(($dir == -2)?'checked="checked"':'').' />';
+            }else{
+                echo '<input type="radio" name="sync['.hsc($id).']" value="-1" title="'.$this->getLang('pull').'" '.(($dir == -1)?'checked="checked"':'').' />';
+            }
             echo '</td>';
 
             echo '<td>';
