@@ -1,4 +1,4 @@
 ====== Files to Synchronize ======
 
-A list of files that differ between your local and the remote wiki is shown below. You need to decide which file you want to keep.
+A list of files that differ between your local and the remote wiki is shown below. You need to decide which revisions you want to keep.
 

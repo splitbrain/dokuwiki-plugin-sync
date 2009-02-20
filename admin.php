@@ -203,10 +203,37 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         $sum = $_REQUEST['sum'];
 
         echo $this->locale_xhtml('sync');
-        echo '<ul>';
+        echo '<ul class="sync">';
         $client = new IXR_Client($this->profiles[$no]['server']);
         $client->user = $this->profiles[$no]['user'];
         $client->pass = $this->profiles[$no]['pass'];
+
+        // lock the files
+        $lock = array();
+        foreach((array) $synclist as $id => $dir){
+            if($dir == 0) continue;
+            if(checklock($id)){
+                echo '<li class="error"><div class="li">';
+                echo $this->getLang('lockfail').' '.hsc($id);
+                echo '</div></li>';
+                unset($synclist[$id]);
+            }else{
+                lock($id); // lock local
+                $lock[] = $id;
+            }
+        }
+        // lock remote files
+        $ok = $client->query('dokuwiki.setLocks',array('lock'=>$lock,'unlock'=>array()));
+        if(!$ok) die('failed RPC communication');
+        $data = $client->getResponse();
+        foreach((array) $data['lockfail'] as $id){
+            echo '<li class="error"><div class="li">';
+            echo $this->getLang('lockfail').' '.hsc($id);
+            echo '</div></li>';
+            unset($synclist[$id]);
+        }
+
+        // do the sync
         foreach((array) $synclist as $id => $dir){
             @set_time_limit(30);
             flush();
@@ -274,6 +301,13 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             }
         }
         echo '</ul>';
+
+        // unlock
+        foreach((array) $synclist as $id => $dir){
+            unlock($id);
+        }
+        $client->query('dokuwiki.setLocks',array('lock'=>array(),'unlock'=>$lock));
+
 
         // save synctime
         list($letime,$retime) = $this->_getTimes($no);

@@ -22,6 +22,7 @@ $lang['ns']     = 'Namespace';
 $lang['save'] = 'Save';
 $lang['changewarn'] = 'Resaving this profile will reset the sync times. You will need to manually choose the sync directions for all files on the next sync.';
 
+$lang['lockfail']      = 'couldn\'t lock and will skip:';
 $lang['pullfail']      = 'pull failed:';
 $lang['pullok']        = 'pull succeded:';
 $lang['localdel']      = 'local delete succeded:';
