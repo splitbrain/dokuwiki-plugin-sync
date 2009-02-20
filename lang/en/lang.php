@@ -31,9 +31,10 @@ $lang['remotedelok']   = 'remote delete succeded:';
 $lang['remotedelfail'] = 'remote delete failed:';
 $lang['skipped']       = 'skipped:';
 
-$lang['page'] = 'Pagename';
-$lang['local'] = 'Local Wiki';
+$lang['page']   = 'Pagename';
+$lang['local']  = 'Local Wiki';
 $lang['remote'] = 'Remote Wiki';
+$lang['diff']   = 'Diff';
 
 $lang['push']    = 'Push local revision to remote wiki.';
 $lang['pushdel'] = 'Delete revision at the remote wiki.';

@@ -313,6 +313,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                 <th>=</th>
                 <th>&lt;</th>
                 <th>'.$this->getLang('remote').'</th>
+                <th>'.$this->getLang('diff').'</th>
               </tr>';
         foreach($synclist as $id => $item){
             // check direction
@@ -374,6 +375,10 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             }
             echo '</td>';
 
+            echo '<td>';
+            echo '<a href="'.DOKU_BASE.'lib/plugins/sync/diff.php?id='.$id.'&amp;no='.$no.'" target="_blank" class="sync_popup">'.$this->getLang('diff').'</a>';
+            echo '</td>';
+
             echo '</tr>';
         }
         echo '</table>';
@@ -383,6 +388,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '</form>';
     }
 
+    /**
+     * Get the local and remote time
+     */
     function _getTimes($no){
         // get remote time
         $client = new IXR_Client($this->profiles[$no]['server']);
@@ -399,6 +407,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         return array($ltime,$rtime);
     }
 
+    /**
+     * Get a list of changed files
+     */
     function _getSyncList($no){
         global $conf;
         $list = array();
@@ -444,5 +455,35 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         return $list;
     }
 
+    /**
+     * show diff between the local and remote versions of the page
+     */
+    function _diff($id){
+        $no = $this->profno;
+        $client = new IXR_Client($this->profiles[$no]['server']);
+        $client->user = $this->profiles[$no]['user'];
+        $client->pass = $this->profiles[$no]['pass'];
+
+        $ok = $client->query('wiki.getPage',$id);
+        if(!$ok){
+            echo $this->getLang('pullfail').' '.hsc($id).' ';
+            echo hsc($client->getErrorMessage());
+            die();
+        }
+        $remote = $client->getResponse();
+        $local  = rawWiki($id);
+
+        $df = new Diff(explode("\n",htmlspecialchars($local)),
+                       explode("\n",htmlspecialchars($remote)));
+
+        $tdf = new TableDiffFormatter();
+        echo '<table class="diff">';
+        echo '<tr>';
+        echo '<th colspan="2">'.$this->getLang('local').'</th>';
+        echo '<th colspan="2">'.$this->getLang('remote').'</th>';
+        echo '</tr>';
+        echo $tdf->format($df);
+        echo '</table>';
+    }
 }
 //Setup VIM: ex: et ts=4 enc=utf-8 :
