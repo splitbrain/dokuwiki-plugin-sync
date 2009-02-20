@@ -67,7 +67,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                 $list = array();
             }
             if(count($list)){
-                $this->_form($this->profno,$list,$lnow,$rnow);
+                $this->_directionForm($this->profno,$list,$lnow,$rnow);
             }else{
                 echo $this->locale_xhtml('nochange');
             }
@@ -87,6 +87,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         }
     }
 
+    /**
+     * Load profiles from serialized storage
+     */
     function _profileLoad(){
         global $conf;
         $profiles = $conf['metadir'].'/sync.profiles';
@@ -95,12 +98,18 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         }
     }
 
+    /**
+     * Save profiles to serialized storage
+     */
     function _profileSave(){
         global $conf;
         $profiles = $conf['metadir'].'/sync.profiles';
         io_saveFile($profiles,serialize($this->profiles));
     }
 
+    /**
+     * Check connection for choosen profile and display last sync date.
+     */
     function _profileView($no){
         global $conf;
 
@@ -129,6 +138,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '</form>';
     }
 
+    /**
+     * Dropdown list of available sync profiles
+     */
     function _profilelist($no=''){
         echo '<form action="" method="post">';
         echo '<fieldset><legend>'.$this->getLang('profile').'</legend>';
@@ -148,6 +160,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '</form>';
     }
 
+    /**
+     * Form to edit or create a sync profile
+     */
     function _profileform($no=''){
         echo '<form action="" method="post">';
         echo '<fieldset><legend>';
@@ -181,7 +196,12 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '</form>';
     }
 
+    /**
+     * Execute the sync action and print the results
+     */
     function _sync($no,&$synclist,$ltime,$rtime){
+        $sum = $_REQUEST['sum'];
+
         echo $this->locale_xhtml('sync');
         echo '<ul>';
         $client = new IXR_Client($this->profiles[$no]['server']);
@@ -198,7 +218,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             }
             if($dir == -2){
                 //delete local
-                saveWikiText($id,'','synced',false);
+                saveWikiText($id,'',$sum,false);
                 echo '<li class="ok"><div class="li">';
                 echo $this->getLang('localdel').' '.hsc($id).' ';
                 echo '</div></li>';
@@ -215,7 +235,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                     continue;
                 }
                 $data = $client->getResponse();
-                saveWikiText($id,$data,'synced',false);
+                saveWikiText($id,$data,$sum,false);
                 echo '<li class="ok"><div class="li">';
                 echo $this->getLang('pullok').' '.hsc($id).' ';
                 echo '</div></li>';
@@ -224,7 +244,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             if($dir == 1){
                 // push
                 $data = rawWiki($id);
-                $ok = $client->query('wiki.putPage',$id,$data,array('sum'=>'synced'));
+                $ok = $client->query('wiki.putPage',$id,$data,array('sum'=>$sum));
                 if(!$ok){
                     echo '<li class="error"><div class="li">';
                     echo $this->getLang('pushfail').' '.hsc($id).' ';
@@ -239,7 +259,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             }
             if($dir == 2){
                 // remote delete
-                $ok = $client->query('wiki.putPage',$id,'',array('sum'=>'synced'));
+                $ok = $client->query('wiki.putPage',$id,'',array('sum'=>$sum));
                 if(!$ok){
                     echo '<li class="error"><div class="li">';
                     echo $this->getLang('remotedelfail').' '.hsc($id).' ';
@@ -266,8 +286,14 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '<p>'.$this->getLang('syncdone').'</p>';
     }
 
-    function _form($no,$synclist,$lnow,$rnow){
+    /**
+     * Print a list of changed files and ask for the sync direction
+     *
+     * Tries to be clever about suggesting the direction
+     */
+    function _directionForm($no,$synclist,$lnow,$rnow){
         global $conf;
+        global $lang;
 
         $ltime = (int) $this->profiles[$no]['ltime'];
         $rtime = (int) $this->profiles[$no]['rtime'];
@@ -351,6 +377,8 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             echo '</tr>';
         }
         echo '</table>';
+        echo '<label for="the__summary">'.$lang['summary'].'</label> ';
+        echo '<input type="text" name="sum" id="the__summary" value="" class="edit" />';
         echo '<input type="submit" value="'.$this->getLang('syncstart').'" class="button" />';
         echo '</form>';
     }
