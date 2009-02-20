@@ -291,13 +291,20 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         foreach($synclist as $id => $item){
             // check direction
             $dir = 0;
-            if($ltime && $rtime){
+            if($ltime && $rtime){ // synced before
                 if($item['remote']['rev'] > $rtime &&
                    $item['local']['rev'] <= $letime){
                     $dir = -1;
                 }
                 if($item['remote']['rev'] <= $retime &&
                    $item['local']['rev'] > $ltime){
+                    $dir = 1;
+                }
+            }else{ // never synced
+                if(!$item['local']['rev'] && $item['remote']['rev']){
+                    $dir = -1;
+                }
+                if($item['local']['rev'] && !$item['remote']['rev']){
                     $dir = 1;
                 }
             }
