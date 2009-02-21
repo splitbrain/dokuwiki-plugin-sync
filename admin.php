@@ -150,6 +150,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             $srv = parse_url($opts['server']);
 
             echo '<option value="'.hsc($pno).'" '.(($no!=='' && $pno == $no)?'selected="selected"':'').'>';
+            echo ($no+1).'. ';
             if($opts['user']) echo hsc($opts['user']).'@';
             echo hsc($srv['host']);
             echo '</option>';
@@ -164,7 +165,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
      * Form to edit or create a sync profile
      */
     function _profileform($no=''){
-        echo '<form action="" method="post">';
+        echo '<form action="" method="post" class="sync_profile">';
         echo '<fieldset><legend>';
         if($no !== ''){
             echo $this->getLang('edit');
@@ -176,22 +177,33 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '<input type="hidden" name="no" value="'.hsc($no).'" />';
 
         echo '<label for="sync__server">'.$this->getLang('server').'</label> ';
-        echo '<input type="text" name="p[server]" id="sync__server" class="edit" value="'.hsc($this->profiles[$no]['server']).'" /><br />';
-        echo '<samp>http://example.com/dokuwiki/lib/exe/xmlrpc.php</samp><br />';
+        echo '<input type="text" name="p[server]" id="sync__server" class="edit" value="'.hsc($this->profiles[$no]['server']).'" />';
+        echo '<samp>http://example.com/dokuwiki/lib/exe/xmlrpc.php</samp>';
 
         echo '<label for="sync__ns">'.$this->getLang('ns').'</label> ';
-        echo '<input type="text" name="p[ns]" id="sync__ns" class="edit" value="'.hsc($this->profiles[$no]['ns']).'" /><br />';
+        echo '<input type="text" name="p[ns]" id="sync__ns" class="edit" value="'.hsc($this->profiles[$no]['ns']).'" />';
+
+        echo '<label for="sync__depth">'.$this->getLang('depth').'</label> ';
+        echo '<select name="p[depth]" id="sync__depth" class="edit">';
+        echo '<option value="0" '.(($this->profiles[$no]['depth']==0)?'selected="selected"':'').'>'.$this->getLang('level0').'</option>';
+        echo '<option value="1" '.(($this->profiles[$no]['depth']==1)?'selected="selected"':'').'>'.$this->getLang('level1').'</option>';
+        echo '<option value="2" '.(($this->profiles[$no]['depth']==2)?'selected="selected"':'').'>'.$this->getLang('level2').'</option>';
+        echo '<option value="3" '.(($this->profiles[$no]['depth']==3)?'selected="selected"':'').'>'.$this->getLang('level3').'</option>';
+        echo '</select>';
+
 
         echo '<label for="sync__user">'.$this->getLang('user').'</label> ';
-        echo '<input type="text" name="p[user]" id="sync__user" class="edit" value="'.hsc($this->profiles[$no]['user']).'" /><br />';
+        echo '<input type="text" name="p[user]" id="sync__user" class="edit" value="'.hsc($this->profiles[$no]['user']).'" />';
 
         echo '<label for="sync__pass">'.$this->getLang('pass').'</label> ';
-        echo '<input type="password" name="p[pass]" id="sync__pass" class="edit" value="'.hsc($this->profiles[$no]['pass']).'" /><br />';
+        echo '<input type="password" name="p[pass]" id="sync__pass" class="edit" value="'.hsc($this->profiles[$no]['pass']).'" />';
 
+        echo '<div>';
         echo '<input type="submit" value="'.$this->getLang('save').'" class="button" />';
         if($no !== '' && $this->profiles[$no]['ltime']){
-            echo '<br /><small>'.$this->getLang('changewarn').'</small>';
+            echo '<small>'.$this->getLang('changewarn').'</small>';
         }
+        echo '</div>';
         echo '</fieldset>';
         echo '</form>';
     }
@@ -453,7 +465,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         $client = new IXR_Client($this->profiles[$no]['server']);
         $client->user = $this->profiles[$no]['user'];
         $client->pass = $this->profiles[$no]['pass'];
-        $ok = $client->query('dokuwiki.getPagelist',$ns,array('depth' => 0, 'hash' => true));
+        $ok = $client->query('dokuwiki.getPagelist',$ns,array('depth' => (int) $this->profiles[$no]['depth'], 'hash' => true));
         if(!$ok){
             msg('Failed to fetch remote file list. '.
                 $client->getErrorMessage(),-1);
@@ -471,7 +483,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         $local = array();
         $dir = utf8_encodeFN(str_replace(':', '/', $ns));
         require_once(DOKU_INC.'inc/search.php');
-        search($local, $conf['datadir'], 'search_allpages', array('depth' => 0, 'hash' => true), $dir);
+        search($local, $conf['datadir'], 'search_allpages', array('depth' => (int) $this->profiles[$no]['depth'], 'hash' => true), $dir);
         // put into synclist
         foreach($local as $item){
             // skip identical files

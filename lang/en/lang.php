@@ -18,6 +18,11 @@ $lang['server'] = 'XMLRPC URL';
 $lang['user']   = 'Username';
 $lang['pass']   = 'Password';
 $lang['ns']     = 'Namespace';
+$lang['depth']  = 'Sync Depth';
+$lang['level0'] = 'All sub namespaces';
+$lang['level1'] = 'No sub namespaces';
+$lang['level2'] = 'Namespace + 1 sub namespace';
+$lang['level3'] = 'Namespace + 2 sub namespaces';
 
 $lang['save'] = 'Save';
 $lang['changewarn'] = 'Resaving this profile will reset the sync times. You will need to manually choose the sync directions for all files on the next sync.';

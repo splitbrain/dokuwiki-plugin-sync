@@ -1,8 +1,34 @@
-div.sync_left {
+div.dokuwiki div.sync_left {
     float: left;
 }
 
-div.sync_right samp {
+div.dokuwiki form.sync_profile fieldset{
+    text-align: left;
+}
+
+div.dokuwiki form.sync_profile samp {
     font-size: small;
+    display: block;
+    margin-left: 4em;
+}
+
+div.dokuwiki form.sync_profile label {
+    display: block;
+}
+
+div.dokuwiki form.sync_profile input.edit,
+div.dokuwiki form.sync_profile select.edit {
+    width: 25em;
+    display: block;
+    margin-left: 2em;
+}
+
+div.dokuwiki form.sync_profile fieldset div {
+    margin-top: 1em;
+    text-align: center;
+}
+
+div.dokuwiki form.sync_profile fieldset div small {
+    display: block;
 }
 
