@@ -1,0 +1,4 @@
+====== Abzugleichende Dateien ======
+
+Die folgenden Dateien sind unterscheiden sich zwischen dem lokalen und dem entfernten Wiki. Sie müssen entscheiden welche der jeweils zwei Versionen beibehalten werden sollen.
+
