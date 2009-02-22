@@ -14,11 +14,19 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
 
     var $profiles = array();
     var $profno = '';
+    var $client = null;
 
+    /**
+     * Constructor. Initializes XMLRPC client
+     */
     function admin_plugin_sync(){
         $this->_profileLoad();
 
         $this->profno = preg_replace('/[^0-9]+/','',$_REQUEST['no']);
+
+        $this->client = new IXR_Client($this->profiles[$this->profno]['server']);
+        $this->client->user = $this->profiles[$this->profno]['user'];
+        $this->client->pass = $this->profiles[$this->profno]['pass'];
     }
 
 
@@ -45,6 +53,11 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             if($this->profno === '') $this->profno = count($this->profiles);
             $this->profiles[$this->profno] = $_REQUEST['p'];
             $this->_profileSave();
+
+            // reset the client
+            $this->client = new IXR_Client($this->profiles[$this->profno]['server']);
+            $this->client->user = $this->profiles[$this->profno]['user'];
+            $this->client->pass = $this->profiles[$this->profno]['pass'];
         }
     }
 
@@ -60,7 +73,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                          (int) $_POST['rnow']);
         }elseif($_REQUEST['startsync'] && $this->profno!==''){
             // get sync list
-            list($lnow,$rnow) = $this->_getTimes($this->profno);
+            list($lnow,$rnow) = $this->_getTimes();
             if($lnow){
                 $list = $this->_getSyncList($this->profno,$rnow);
             }else{
@@ -113,12 +126,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     function _profileView($no){
         global $conf;
 
-        $client = new IXR_Client($this->profiles[$no]['server']);
-        $client->user = $this->profiles[$no]['user'];
-        $client->pass = $this->profiles[$no]['pass'];
-        $ok = $client->query('dokuwiki.getVersion');
+        $ok = $this->client->query('dokuwiki.getVersion');
         $version = '';
-        if($ok) $version = $client->getResponse();
+        if($ok) $version = $this->client->getResponse();
 
         echo '<form action="" method="post">';
         echo '<input type="hidden" name="no" value="'.hsc($no).'" />';
@@ -132,7 +142,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             }
             echo '<input name="startsync" type="submit" value="'.$this->getLang('syncstart').'" class="button" />';
         }else{
-            echo '<p class="error">'.$this->getLang('noconnect').'<br />'.hsc($client->getErrorMessage()).'</p>';
+            echo '<p class="error">'.$this->getLang('noconnect').'<br />'.hsc($this->client->getErrorMessage()).'</p>';
         }
         echo '</fieldset>';
         echo '</form>';
@@ -209,25 +219,19 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     }
 
     /**
-     * Execute the sync action and print the results
+     * Lock files that will be modified on either side.
+     *
+     * Lock fails are printed and removed from synclist
+     *
+     * @returns list of locked files
      */
-    function _sync($no,&$synclist,$ltime,$rtime){
-        $sum = $_REQUEST['sum'];
-
-        echo $this->locale_xhtml('sync');
-        echo '<ul class="sync">';
-        $client = new IXR_Client($this->profiles[$no]['server']);
-        $client->user = $this->profiles[$no]['user'];
-        $client->pass = $this->profiles[$no]['pass'];
-
+    function _lockFiles(&$synclist){
         // lock the files
         $lock = array();
         foreach((array) $synclist as $id => $dir){
             if($dir == 0) continue;
             if(checklock($id)){
-                echo '<li class="error"><div class="li">';
-                echo $this->getLang('lockfail').' '.hsc($id);
-                echo '</div></li>';
+                $this->_listOut($this->getLang('lockfail').' '.hsc($id),'error');
                 unset($synclist[$id]);
             }else{
                 lock($id); // lock local
@@ -235,80 +239,89 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             }
         }
         // lock remote files
-        $ok = $client->query('dokuwiki.setLocks',array('lock'=>$lock,'unlock'=>array()));
-        if(!$ok) die('failed RPC communication');
-        $data = $client->getResponse();
+        $ok = $this->client->query('dokuwiki.setLocks',array('lock'=>$lock,'unlock'=>array()));
+        if(!$ok){
+            $this->_listOut('failed RPC communication');
+            $synclist = array();
+            return array();
+        }
+        $data = $this->client->getResponse();
         foreach((array) $data['lockfail'] as $id){
-            echo '<li class="error"><div class="li">';
-            echo $this->getLang('lockfail').' '.hsc($id);
-            echo '</div></li>';
+            $this->_listOut($this->getLang('lockfail').' '.hsc($id),'error');
             unset($synclist[$id]);
         }
+
+        return $lock;
+    }
+
+    /**
+     * Print a message as list item using the given class
+     */
+    function _listOut($msg,$class='ok'){
+        echo '<li class="'.hsc($class).'"><div class="li">';
+        echo hsc($msg);
+        echo "</div></li>\n";
+    }
+
+    /**
+     * Execute the sync action and print the results
+     */
+    function _sync($no,&$synclist,$ltime,$rtime){
+        $sum = $_REQUEST['sum'];
+
+        echo $this->locale_xhtml('sync');
+        echo '<ul class="sync">';
+
+        $lock = $this->_lockfiles($synclist);
 
         // do the sync
         foreach((array) $synclist as $id => $dir){
             @set_time_limit(30);
             flush();
             if($dir == 0){
-                echo '<li class="ok"><div class="li">';
-                echo $this->getLang('skipped').' '.hsc($id).' ';
-                echo '</div></li>';
+                $this->_listOut($this->getLang('skipped').' '.$id);
                 continue;
             }
             if($dir == -2){
                 //delete local
                 saveWikiText($id,'',$sum,false);
-                echo '<li class="ok"><div class="li">';
-                echo $this->getLang('localdel').' '.hsc($id).' ';
-                echo '</div></li>';
+                $this->_listOut($this->getLang('localdel').' '.$id);
                 continue;
             }
             if($dir == -1){
                 //pull
-                $ok = $client->query('wiki.getPage',$id);
+                $ok = $this->client->query('wiki.getPage',$id);
                 if(!$ok){
-                    echo '<li class="error"><div class="li">';
-                    echo $this->getLang('pullfail').' '.hsc($id).' ';
-                    echo hsc($client->getErrorMessage());
-                    echo '</div></li>';
+                    $this->_listOut($this->getLang('pullfail').' '.$id.' '.
+                                    $this->client->getErrorMessage(),'error');
                     continue;
                 }
-                $data = $client->getResponse();
+                $data = $this->client->getResponse();
                 saveWikiText($id,$data,$sum,false);
-                echo '<li class="ok"><div class="li">';
-                echo $this->getLang('pullok').' '.hsc($id).' ';
-                echo '</div></li>';
+                $this->_listOut($this->getLang('pullok').' '.$id);
                 continue;
             }
             if($dir == 1){
                 // push
                 $data = rawWiki($id);
-                $ok = $client->query('wiki.putPage',$id,$data,array('sum'=>$sum));
+                $ok = $this->client->query('wiki.putPage',$id,$data,array('sum'=>$sum));
                 if(!$ok){
-                    echo '<li class="error"><div class="li">';
-                    echo $this->getLang('pushfail').' '.hsc($id).' ';
-                    echo hsc($client->getErrorMessage());
-                    echo '</div></li>';
+                    $this->_listOut($this->getLang('pushfail').' '.$id.' '.
+                                    $this->client->getErrorMessage(),'error');
                     continue;
                 }
-                echo '<li class="ok"><div class="li">';
-                echo $this->getLang('pushok').' '.hsc($id).' ';
-                echo '</div></li>';
+                $this->_listOut($this->getLang('pushok').' '.$id);
                 continue;
             }
             if($dir == 2){
                 // remote delete
-                $ok = $client->query('wiki.putPage',$id,'',array('sum'=>$sum));
+                $ok = $this->client->query('wiki.putPage',$id,'',array('sum'=>$sum));
                 if(!$ok){
-                    echo '<li class="error"><div class="li">';
-                    echo $this->getLang('remotedelfail').' '.hsc($id).' ';
-                    echo hsc($client->getErrorMessage());
-                    echo '</div></li>';
+                    $this->_listOut($this->getLang('remotedelfail').' '.$id.' '.
+                                    $this->client->getErrorMessage(),'error');
                     continue;
                 }
-                echo '<li class="ok"><div class="li">';
-                echo $this->getLang('remotedelok').' '.hsc($id).' ';
-                echo '</div></li>';
+                $this->_listOut($this->getLang('remotedelok').' '.$id);
                 continue;
             }
         }
@@ -318,11 +331,11 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         foreach((array) $synclist as $id => $dir){
             unlock($id);
         }
-        $client->query('dokuwiki.setLocks',array('lock'=>array(),'unlock'=>$lock));
+        $this->client->query('dokuwiki.setLocks',array('lock'=>array(),'unlock'=>$lock));
 
 
         // save synctime
-        list($letime,$retime) = $this->_getTimes($no);
+        list($letime,$retime) = $this->_getTimes();
         $this->profiles[$no]['ltime'] = $ltime;
         $this->profiles[$no]['rtime'] = $rtime;
         $this->profiles[$no]['letime'] = $letime;
@@ -437,18 +450,15 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     /**
      * Get the local and remote time
      */
-    function _getTimes($no){
+    function _getTimes(){
         // get remote time
-        $client = new IXR_Client($this->profiles[$no]['server']);
-        $client->user = $this->profiles[$no]['user'];
-        $client->pass = $this->profiles[$no]['pass'];
-        $ok = $client->query('dokuwiki.getTime');
+        $ok = $this->client->query('dokuwiki.getTime');
         if(!$ok){
             msg('Failed to fetch remote time. '.
-                $client->getErrorMessage(),-1);
+                $this->client->getErrorMessage(),-1);
             return false;
         }
-        $rtime = $client->getResponse();
+        $rtime = $this->client->getResponse();
         $ltime = time();
         return array($ltime,$rtime);
     }
@@ -462,16 +472,13 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         $ns = $this->profiles[$no]['ns'];
 
         // get remote file list
-        $client = new IXR_Client($this->profiles[$no]['server']);
-        $client->user = $this->profiles[$no]['user'];
-        $client->pass = $this->profiles[$no]['pass'];
-        $ok = $client->query('dokuwiki.getPagelist',$ns,array('depth' => (int) $this->profiles[$no]['depth'], 'hash' => true));
+        $ok = $this->client->query('dokuwiki.getPagelist',$ns,array('depth' => (int) $this->profiles[$no]['depth'], 'hash' => true));
         if(!$ok){
             msg('Failed to fetch remote file list. '.
-                $client->getErrorMessage(),-1);
+                $this->client->getErrorMessage(),-1);
             return false;
         }
-        $remote = $client->getResponse();
+        $remote = $this->client->getResponse();
         // put into synclist
         foreach($remote as $item){
             $list[$item['id']]['remote'] = $item;
@@ -506,17 +513,14 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
      */
     function _diff($id){
         $no = $this->profno;
-        $client = new IXR_Client($this->profiles[$no]['server']);
-        $client->user = $this->profiles[$no]['user'];
-        $client->pass = $this->profiles[$no]['pass'];
 
-        $ok = $client->query('wiki.getPage',$id);
+        $ok = $this->client->query('wiki.getPage',$id);
         if(!$ok){
             echo $this->getLang('pullfail').' '.hsc($id).' ';
-            echo hsc($client->getErrorMessage());
+            echo hsc($this->client->getErrorMessage());
             die();
         }
-        $remote = $client->getResponse();
+        $remote = $this->client->getResponse();
         $local  = rawWiki($id);
 
         $df = new Diff(explode("\n",htmlspecialchars($local)),
