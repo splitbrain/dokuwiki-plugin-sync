@@ -23,6 +23,11 @@ $lang['level0'] = 'All sub namespaces';
 $lang['level1'] = 'No sub namespaces';
 $lang['level2'] = 'Namespace + 1 sub namespace';
 $lang['level3'] = 'Namespace + 2 sub namespaces';
+$lang['type']   = 'What to sync';
+$lang['type0']  = 'Everything';
+$lang['type1']  = 'Pages only';
+$lang['type2']  = 'Media files';
+
 
 $lang['save'] = 'Save';
 $lang['changewarn'] = 'Resaving this profile will reset the sync times. You will need to manually choose the sync directions for all files on the next sync.';
@@ -30,14 +35,15 @@ $lang['changewarn'] = 'Resaving this profile will reset the sync times. You will
 $lang['lockfail']      = 'couldn\'t lock and will skip:';
 $lang['pullfail']      = 'pull failed:';
 $lang['pullok']        = 'pull succeded:';
-$lang['localdel']      = 'local delete succeded:';
+$lang['localdelok']    = 'local delete succeded:';
+$lang['localdelfail']  = 'local delete failed:';
 $lang['pushfail']      = 'push failed:';
 $lang['pushok']        = 'push succeded:';
 $lang['remotedelok']   = 'remote delete succeded:';
 $lang['remotedelfail'] = 'remote delete failed:';
 $lang['skipped']       = 'skipped:';
 
-$lang['page']   = 'Pagename';
+$lang['file']   = 'Page or Media File';
 $lang['local']  = 'Local Wiki';
 $lang['remote'] = 'Remote Wiki';
 $lang['diff']   = 'Diff';

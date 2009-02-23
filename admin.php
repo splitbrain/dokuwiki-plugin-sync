@@ -65,22 +65,45 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
      * output appropriate html
      */
     function html() {
-        if($_POST['sync'] && $this->profno!==''){
+        if(($_POST['sync_pages'] || $_POST['sync_media']) && $this->profno!==''){
             // do the sync
-            $this->_sync($this->profno,
-                         $_POST['sync'],
-                         (int) $_POST['lnow'],
-                         (int) $_POST['rnow']);
+            echo $this->locale_xhtml('sync');
+            echo '<ul class="sync">';
+
+            if($_POST['sync_pages']){
+                $this->_sync($_POST['sync_pages'],'pages');
+            }
+            if($_POST['sync_media']){
+                $this->_sync($_POST['sync_media'],'media');
+            }
+            $this->_saveSyncTimes((int) $_POST['lnow'],
+                                 (int) $_POST['rnow']);
+
+            echo '</ul>';
+            echo '<p>'.$this->getLang('syncdone').'</p>';
         }elseif($_REQUEST['startsync'] && $this->profno!==''){
             // get sync list
             list($lnow,$rnow) = $this->_getTimes();
-            if($lnow){
-                $list = $this->_getSyncList($this->profno,$rnow);
-            }else{
-                $list = array();
+            $pages = array();
+            $media = array();
+            if($rnow){
+                if($this->profiles[$this->profno]['type'] == 0 ||
+                   $this->profiles[$this->profno]['type'] == 1){
+                    $pages = $this->_getSyncList('pages');
+                }
+                if($this->profiles[$this->profno]['type'] == 0 ||
+                   $this->profiles[$this->profno]['type'] == 2){
+                    $media = $this->_getSyncList('media');
+                }
             }
-            if(count($list)){
-                $this->_directionForm($this->profno,$list,$lnow,$rnow);
+            if(count($pages) || count($media)){
+                $this->_directionFormStart($lnow,$rnow);
+                if(count($pages))
+                    $this->_directionForm('pages',$pages);
+                if(count($media))
+                    $this->_directionForm('media',$media);
+
+                $this->_directionFormEnd();
             }else{
                 echo $this->locale_xhtml('nochange');
             }
@@ -123,8 +146,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     /**
      * Check connection for choosen profile and display last sync date.
      */
-    function _profileView($no){
+    function _profileView(){
         global $conf;
+        $no = $this->profno;
 
         $ok = $this->client->query('dokuwiki.getVersion');
         $version = '';
@@ -208,7 +232,22 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '<label for="sync__pass">'.$this->getLang('pass').'</label> ';
         echo '<input type="password" name="p[pass]" id="sync__pass" class="edit" value="'.hsc($this->profiles[$no]['pass']).'" />';
 
-        echo '<div>';
+        echo '<span>'.$this->getLang('type').'</span>';
+
+        echo '<div class="type">';
+        echo '<input type="radio" name="p[type]" id="sync__type0" value="0" '.(($this->profiles[$no]['type'] == 0)?'checked="checked"':'').'/>';
+        echo '<label for="sync__type0">'.$this->getLang('type0').'</label> ';
+
+        echo '<input type="radio" name="p[type]" id="sync__type1" value="1" '.(($this->profiles[$no]['type'] == 1)?'checked="checked"':'').'/>';
+        echo '<label for="sync__type1">'.$this->getLang('type1').'</label> ';
+
+        echo '<input type="radio" name="p[type]" id="sync__type2" value="2" '.(($this->profiles[$no]['type'] == 2)?'checked="checked"':'').'/>';
+        echo '<label for="sync__type2">'.$this->getLang('type2').'</label> ';
+        echo '</div>';
+
+
+
+        echo '<div class="submit">';
         echo '<input type="submit" value="'.$this->getLang('save').'" class="button" />';
         if($no !== '' && $this->profiles[$no]['ltime']){
             echo '<small>'.$this->getLang('changewarn').'</small>';
@@ -266,13 +305,12 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     /**
      * Execute the sync action and print the results
      */
-    function _sync($no,&$synclist,$ltime,$rtime){
+    function _sync(&$synclist,$type){
+        $no = $this->profno;
         $sum = $_REQUEST['sum'];
 
-        echo $this->locale_xhtml('sync');
-        echo '<ul class="sync">';
-
-        $lock = $this->_lockfiles($synclist);
+        if($type == 'pages')
+            $lock = $this->_lockfiles($synclist);
 
         // do the sync
         foreach((array) $synclist as $id => $dir){
@@ -284,27 +322,48 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             }
             if($dir == -2){
                 //delete local
-                saveWikiText($id,'',$sum,false);
-                $this->_listOut($this->getLang('localdel').' '.$id);
+                if($type == 'pages'){
+                    saveWikiText($id,'',$sum,false);
+                    $this->_listOut($this->getLang('localdelok').' '.$id);
+                }else{
+                    if(unlink(mediaFN($id))){
+                        $this->_listOut($this->getLang('localdelok').' '.$id);
+                    }else{
+                        $this->_listOut($this->getLang('localdelfail').' '.$id);
+                    }
+                }
                 continue;
             }
             if($dir == -1){
                 //pull
-                $ok = $this->client->query('wiki.getPage',$id);
+                if($type == 'pages'){
+                    $ok = $this->client->query('wiki.getPage',$id);
+                }else{
+                    $ok = $this->client->query('wiki.getAttachment',$id);
+                }
                 if(!$ok){
                     $this->_listOut($this->getLang('pullfail').' '.$id.' '.
                                     $this->client->getErrorMessage(),'error');
                     continue;
                 }
                 $data = $this->client->getResponse();
-                saveWikiText($id,$data,$sum,false);
+                if($type == 'pages'){
+                    saveWikiText($id,$data,$sum,false);
+                }else{
+                    io_saveFile(mediaFN($id),base64_decode($data));
+                }
                 $this->_listOut($this->getLang('pullok').' '.$id);
                 continue;
             }
             if($dir == 1){
                 // push
-                $data = rawWiki($id);
-                $ok = $this->client->query('wiki.putPage',$id,$data,array('sum'=>$sum));
+                if($type == 'pages'){
+                    $data = rawWiki($id);
+                    $ok = $this->client->query('wiki.putPage',$id,$data,array('sum'=>$sum));
+                }else{
+                    $data = io_readFile(mediaFN($id),false);
+                    $ok = $this->client->query('wiki.putAttachment',$id,base64_encode($data),array('ow'=>true));
+                }
                 if(!$ok){
                     $this->_listOut($this->getLang('pushfail').' '.$id.' '.
                                     $this->client->getErrorMessage(),'error');
@@ -315,7 +374,11 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             }
             if($dir == 2){
                 // remote delete
-                $ok = $this->client->query('wiki.putPage',$id,'',array('sum'=>$sum));
+                if($type == 'pages'){
+                    $ok = $this->client->query('wiki.putPage',$id,'',array('sum'=>$sum));
+                }else{
+                    $ok = $this->client->query('wiki.deleteAttachment',$id);
+                }
                 if(!$ok){
                     $this->_listOut($this->getLang('remotedelfail').' '.$id.' '.
                                     $this->client->getErrorMessage(),'error');
@@ -325,40 +388,36 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                 continue;
             }
         }
-        echo '</ul>';
 
         // unlock
-        foreach((array) $synclist as $id => $dir){
-            unlock($id);
+        if($type == 'pages'){
+            foreach((array) $synclist as $id => $dir){
+                unlock($id);
+            }
+            $this->client->query('dokuwiki.setLocks',array('lock'=>array(),'unlock'=>$lock));
         }
-        $this->client->query('dokuwiki.setLocks',array('lock'=>array(),'unlock'=>$lock));
 
 
-        // save synctime
+    }
+
+    /**
+     * Save synctimes
+     */
+    function _saveSyncTimes($ltime,$rtime){
+        $no = $this->profno;
         list($letime,$retime) = $this->_getTimes();
         $this->profiles[$no]['ltime'] = $ltime;
         $this->profiles[$no]['rtime'] = $rtime;
         $this->profiles[$no]['letime'] = $letime;
         $this->profiles[$no]['retime'] = $retime;
         $this->_profileSave();
-
-        echo '<p>'.$this->getLang('syncdone').'</p>';
     }
 
     /**
-     * Print a list of changed files and ask for the sync direction
-     *
-     * Tries to be clever about suggesting the direction
+     * Open the sync direction form and initialize the table
      */
-    function _directionForm($no,$synclist,$lnow,$rnow){
-        global $conf;
-        global $lang;
-
-        $ltime = (int) $this->profiles[$no]['ltime'];
-        $rtime = (int) $this->profiles[$no]['rtime'];
-        $letime = (int) $this->profiles[$no]['letime'];
-        $retime = (int) $this->profiles[$no]['retime'];
-
+    function _directionFormStart($lnow,$rnow){
+        $no = $this->profno;
         echo $this->locale_xhtml('list');
         echo '<form action="" method="post">';
         echo '<table class="inline">';
@@ -366,7 +425,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '<input type="hidden" name="rnow" value="'.$rnow.'" />';
         echo '<input type="hidden" name="no" value="'.$no.'" />';
         echo '<tr>
-                <th>'.$this->getLang('page').'</th>
+                <th>'.$this->getLang('file').'</th>
                 <th>'.$this->getLang('local').'</th>
                 <th>&gt;</th>
                 <th>=</th>
@@ -374,23 +433,51 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                 <th>'.$this->getLang('remote').'</th>
                 <th>'.$this->getLang('diff').'</th>
               </tr>';
+    }
+
+    /**
+     * Close the direction form and table
+     */
+    function _directionFormEnd(){
+        echo '</table>';
+        echo '<label for="the__summary">'.$lang['summary'].'</label> ';
+        echo '<input type="text" name="sum" id="the__summary" value="" class="edit" />';
+        echo '<input type="submit" value="'.$this->getLang('syncstart').'" class="button" />';
+        echo '</form>';
+    }
+
+    /**
+     * Print a list of changed files and ask for the sync direction
+     *
+     * Tries to be clever about suggesting the direction
+     */
+    function _directionForm($type,&$synclist){
+        global $conf;
+        global $lang;
+        $no = $this->profno;
+
+        $ltime = (int) $this->profiles[$no]['ltime'];
+        $rtime = (int) $this->profiles[$no]['rtime'];
+        $letime = (int) $this->profiles[$no]['letime'];
+        $retime = (int) $this->profiles[$no]['retime'];
+
         foreach($synclist as $id => $item){
             // check direction
             $dir = 0;
             if($ltime && $rtime){ // synced before
-                if($item['remote']['rev'] > $rtime &&
-                   $item['local']['rev'] <= $letime){
+                if($item['remote']['mtime'] > $rtime &&
+                   $item['local']['mtime'] <= $letime){
                     $dir = -1;
                 }
-                if($item['remote']['rev'] <= $retime &&
-                   $item['local']['rev'] > $ltime){
+                if($item['remote']['mtime'] <= $retime &&
+                   $item['local']['mtime'] > $ltime){
                     $dir = 1;
                 }
             }else{ // never synced
-                if(!$item['local']['rev'] && $item['remote']['rev']){
+                if(!$item['local']['mtime'] && $item['remote']['mtime']){
                     $dir = -1;
                 }
-                if($item['local']['rev'] && !$item['remote']['rev']){
+                if($item['local']['mtime'] && !$item['remote']['mtime']){
                     $dir = 1;
                 }
             }
@@ -402,26 +489,26 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             if(!isset($item['local'])){
                 echo '&mdash;';
             }else{
-                echo strftime($conf['dformat'],$item['local']['rev']);
+                echo strftime($conf['dformat'],$item['local']['mtime']);
                 echo ' ('.$item['local']['size'].' bytes)';
             }
             echo '</td>';
 
             echo '<td>';
             if(!isset($item['local'])){
-                echo '<input type="radio" name="sync['.hsc($id).']" value="2" title="'.$this->getLang('pushdel').'" '.(($dir == 2)?'checked="checked"':'').' />';
+                echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="2" title="'.$this->getLang('pushdel').'" '.(($dir == 2)?'checked="checked"':'').' />';
             }else{
-                echo '<input type="radio" name="sync['.hsc($id).']" value="1" title="'.$this->getLang('push').'" '.(($dir == 1)?'checked="checked"':'').' />';
+                echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="1" title="'.$this->getLang('push').'" '.(($dir == 1)?'checked="checked"':'').' />';
             }
             echo '</td>';
             echo '<td>';
-            echo '<input type="radio" name="sync['.hsc($id).']" value="0" title="'.$this->getLang('keep').'" '.(($dir == 0)?'checked="checked"':'').' />';
+            echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="0" title="'.$this->getLang('keep').'" '.(($dir == 0)?'checked="checked"':'').' />';
             echo '</td>';
             echo '<td>';
             if(!isset($item['remote'])){
-                echo '<input type="radio" name="sync['.hsc($id).']" value="-2" title="'.$this->getLang('pulldel').'" '.(($dir == -2)?'checked="checked"':'').' />';
+                echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="-2" title="'.$this->getLang('pulldel').'" '.(($dir == -2)?'checked="checked"':'').' />';
             }else{
-                echo '<input type="radio" name="sync['.hsc($id).']" value="-1" title="'.$this->getLang('pull').'" '.(($dir == -1)?'checked="checked"':'').' />';
+                echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="-1" title="'.$this->getLang('pull').'" '.(($dir == -1)?'checked="checked"':'').' />';
             }
             echo '</td>';
 
@@ -429,22 +516,19 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             if(!isset($item['remote'])){
                 echo '&mdash;';
             }else{
-                echo strftime($conf['dformat'],$item['remote']['rev']);
+                echo strftime($conf['dformat'],$item['remote']['mtime']);
                 echo ' ('.$item['remote']['size'].' bytes)';
             }
             echo '</td>';
 
             echo '<td>';
-            echo '<a href="'.DOKU_BASE.'lib/plugins/sync/diff.php?id='.$id.'&amp;no='.$no.'" target="_blank" class="sync_popup">'.$this->getLang('diff').'</a>';
+            if($type == 'pages'){
+                echo '<a href="'.DOKU_BASE.'lib/plugins/sync/diff.php?id='.$id.'&amp;no='.$no.'" target="_blank" class="sync_popup">'.$this->getLang('diff').'</a>';
+            }
             echo '</td>';
 
             echo '</tr>';
         }
-        echo '</table>';
-        echo '<label for="the__summary">'.$lang['summary'].'</label> ';
-        echo '<input type="text" name="sum" id="the__summary" value="" class="edit" />';
-        echo '<input type="submit" value="'.$this->getLang('syncstart').'" class="button" />';
-        echo '</form>';
     }
 
     /**
@@ -466,13 +550,22 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     /**
      * Get a list of changed files
      */
-    function _getSyncList($no){
+    function _getSyncList($type='pages'){
         global $conf;
+        $no = $this->profno;
         $list = array();
         $ns = $this->profiles[$no]['ns'];
 
         // get remote file list
-        $ok = $this->client->query('dokuwiki.getPagelist',$ns,array('depth' => (int) $this->profiles[$no]['depth'], 'hash' => true));
+        if($type == 'pages'){
+            $ok = $this->client->query('dokuwiki.getPagelist',$ns,
+                    array('depth' => (int) $this->profiles[$no]['depth'],
+                          'hash' => true));
+        }else{
+            $ok = $this->client->query('wiki.getAttachments',$ns,
+                    array('depth' => (int) $this->profiles[$no]['depth'],
+                          'hash' => true));
+        }
         if(!$ok){
             msg('Failed to fetch remote file list. '.
                 $this->client->getErrorMessage(),-1);
@@ -490,7 +583,15 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         $local = array();
         $dir = utf8_encodeFN(str_replace(':', '/', $ns));
         require_once(DOKU_INC.'inc/search.php');
-        search($local, $conf['datadir'], 'search_allpages', array('depth' => (int) $this->profiles[$no]['depth'], 'hash' => true), $dir);
+        if($type == 'pages'){
+            search($local, $conf['datadir'], 'search_allpages',
+                    array('depth' => (int) $this->profiles[$no]['depth'],
+                          'hash' => true), $dir);
+        }else{
+            search($local, $conf['mediadir'], 'search_media',
+                    array('depth' => (int) $this->profiles[$no]['depth'],
+                          'hash' => true), $dir);
+        }
         // put into synclist
         foreach($local as $item){
             // skip identical files
