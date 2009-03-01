@@ -68,6 +68,16 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         if(($_POST['sync_pages'] || $_POST['sync_media']) && $this->profno!==''){
             // do the sync
             echo $this->locale_xhtml('sync');
+
+            //show progressbar
+            echo '<div class="centeralign" id="dw__loading">'.NL;
+            echo '<script type="text/javascript" charset="utf-8"><!--//--><![CDATA[//><!--'.NL;
+            echo 'showLoadBar();'.NL;
+            echo '//--><!]]></script>'.NL;
+            echo '<br /></div>'.NL;
+            flush();
+            ob_flush();
+
             echo '<ul class="sync">';
 
             if($_POST['sync_pages']){
@@ -80,6 +90,15 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                                  (int) $_POST['rnow']);
 
             echo '</ul>';
+
+            //hide progressbar
+            echo '<script type="text/javascript" charset="utf-8"><!--//--><![CDATA[//><!--'.NL;
+            echo 'hideLoadBar("dw__loading");'.NL;
+            echo '//--><!]]></script>'.NL;
+            flush();
+            ob_flush();
+
+
             echo '<p>'.$this->getLang('syncdone').'</p>';
         }elseif($_REQUEST['startsync'] && $this->profno!==''){
             // get sync list
@@ -300,6 +319,8 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '<li class="'.hsc($class).'"><div class="li">';
         echo hsc($msg);
         echo "</div></li>\n";
+        flush();
+        ob_flush();
     }
 
     /**
@@ -315,7 +336,6 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         // do the sync
         foreach((array) $synclist as $id => $dir){
             @set_time_limit(30);
-            flush();
             if($dir == 0){
                 $this->_listOut($this->getLang('skipped').' '.$id);
                 continue;
@@ -439,6 +459,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
      * Close the direction form and table
      */
     function _directionFormEnd(){
+        global $lang;
         echo '</table>';
         echo '<label for="the__summary">'.$lang['summary'].'</label> ';
         echo '<input type="text" name="sum" id="the__summary" value="" class="edit" />';
