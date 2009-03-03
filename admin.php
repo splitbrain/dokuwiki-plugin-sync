@@ -17,19 +17,49 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     var $client = null;
 
     /**
-     * Constructor. Initializes XMLRPC client
+     * Constructor.
      */
     function admin_plugin_sync(){
         $this->_profileLoad();
-
         $this->profno = preg_replace('/[^0-9]+/','',$_REQUEST['no']);
-
-        $this->client = new IXR_Client($this->profiles[$this->profno]['server']);
-        $this->client->user = $this->profiles[$this->profno]['user'];
-        $this->client->pass = $this->profiles[$this->profno]['pass'];
     }
 
+    function _connect(){
+        if(!is_null($this->client)) return true;
+        $this->client = new IXR_Client($this->profiles[$this->profno]['server']);
 
+        // do the login
+        if($this->profiles[$this->profno]['user']){
+            $ok = $this->client->query('dokuwiki.login',
+                    $this->profiles[$this->profno]['user'],
+                    $this->profiles[$this->profno]['pass']
+                  );
+            if(!$ok){
+                msg($this->getLang('xmlerr').' '.hsc($this->client->getErrorMessage()),-1);
+                $this->client = null;
+                return false;
+            }
+            if(!$this->client->getResponse()){
+                msg($this->getLang('loginerr'),-1);
+                $this->client = null;
+                return false;
+            }
+        }
+
+        $ok = $this->client->query('dokuwiki.getXMLRPCAPIVersion');
+        if(!$ok){
+            msg($this->getLang('xmlerr').' '.hsc($this->client->getErrorMessage()),-1);
+            $this->client = null;
+            return false;
+        }
+        if(((int) $this->client->getResponse()) < 1){
+            msg($this->getLang('versionerr'),-1);
+            $this->client = null;
+            return false;
+        }
+
+        return true;
+    }
 
     /**
      * return some info
@@ -55,9 +85,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             $this->_profileSave();
 
             // reset the client
-            $this->client = new IXR_Client($this->profiles[$this->profno]['server']);
-            $this->client->user = $this->profiles[$this->profno]['user'];
-            $this->client->pass = $this->profiles[$this->profno]['pass'];
+            $this->client = null;
         }
     }
 
@@ -166,6 +194,8 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
      * Check connection for choosen profile and display last sync date.
      */
     function _profileView(){
+        if(!$this->_connect()) return false;
+
         global $conf;
         $no = $this->profno;
 
@@ -284,6 +314,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
      * @returns list of locked files
      */
     function _lockFiles(&$synclist){
+        if(!$this->_connect()) return array();
         // lock the files
         $lock = array();
         foreach((array) $synclist as $id => $dir){
@@ -327,6 +358,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
      * Execute the sync action and print the results
      */
     function _sync(&$synclist,$type){
+        if(!$this->_connect()) return false;
         $no = $this->profno;
         $sum = $_REQUEST['sum'];
 
@@ -556,6 +588,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
      * Get the local and remote time
      */
     function _getTimes(){
+        if(!$this->_connect()) return false;
         // get remote time
         $ok = $this->client->query('dokuwiki.getTime');
         if(!$ok){
@@ -572,6 +605,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
      * Get a list of changed files
      */
     function _getSyncList($type='pages'){
+        if(!$this->_connect()) return array();
         global $conf;
         $no = $this->profno;
         $list = array();
@@ -634,6 +668,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
      * show diff between the local and remote versions of the page
      */
     function _diff($id){
+        if(!$this->_connect()) return false;
         $no = $this->profno;
 
         $ok = $this->client->query('wiki.getPage',$id);

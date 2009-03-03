@@ -2,6 +2,11 @@ div.dokuwiki div.sync_left {
     float: left;
 }
 
+div.dokuwiki div.sync_left div.error {
+    width: 25em;
+    padding: 4px 8px 4px 25px;
+}
+
 div.dokuwiki form.sync_profile fieldset{
     text-align: left;
 }

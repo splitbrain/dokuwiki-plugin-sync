@@ -5,7 +5,10 @@ $lang['menu'] = 'Synchronize Wikis';
 $lang['syncstart'] = 'Start Synchronization';
 $lang['lastsync']  = 'Last Synchronization:';
 $lang['remotever'] = 'Remote Wiki Version:';
-$lang['noconnect'] = 'Failed to query version from remote wiki. Make sure the remote wiki allows XMLRPC requests and that you set up the endpoint URL correctly.';
+
+$lang['xmlerr']   = 'Failed to talk to remote wiki. Make sure the remote wiki allows XMLRPC requests and that you set up the endpoint URL correctly.';
+$lang['loginerr'] = 'Failed to login at remote wiki. Make sure supplied credentials are valid at the remote wiki.';
+$lang['versionerr'] = 'The remote wiki XMLRPC API version is too old. You need to upgrade the remote wiki to use the sync plugin.';
 
 $lang['neversync'] = 'This profile was never synced before.';
 $lang['profile'] = 'Sync Profile';
