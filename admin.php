@@ -79,9 +79,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
      * handle user request
      */
     function handle() {
-        if(isset($_REQUEST['p']) && is_array($_REQUEST['p'])){
+        if(isset($_REQUEST['prf']) && is_array($_REQUEST['prf'])){
             if($this->profno === '') $this->profno = count($this->profiles);
-            $this->profiles[$this->profno] = $_REQUEST['p'];
+            $this->profiles[$this->profno] = $_REQUEST['prf'];
             $this->_profileSave();
 
             // reset the client
@@ -260,14 +260,14 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '<input type="hidden" name="no" value="'.hsc($no).'" />';
 
         echo '<label for="sync__server">'.$this->getLang('server').'</label> ';
-        echo '<input type="text" name="p[server]" id="sync__server" class="edit" value="'.hsc($this->profiles[$no]['server']).'" />';
+        echo '<input type="text" name="prf[server]" id="sync__server" class="edit" value="'.hsc($this->profiles[$no]['server']).'" />';
         echo '<samp>http://example.com/dokuwiki/lib/exe/xmlrpc.php</samp>';
 
         echo '<label for="sync__ns">'.$this->getLang('ns').'</label> ';
-        echo '<input type="text" name="p[ns]" id="sync__ns" class="edit" value="'.hsc($this->profiles[$no]['ns']).'" />';
+        echo '<input type="text" name="prf[ns]" id="sync__ns" class="edit" value="'.hsc($this->profiles[$no]['ns']).'" />';
 
         echo '<label for="sync__depth">'.$this->getLang('depth').'</label> ';
-        echo '<select name="p[depth]" id="sync__depth" class="edit">';
+        echo '<select name="prf[depth]" id="sync__depth" class="edit">';
         echo '<option value="0" '.(($this->profiles[$no]['depth']==0)?'selected="selected"':'').'>'.$this->getLang('level0').'</option>';
         echo '<option value="1" '.(($this->profiles[$no]['depth']==1)?'selected="selected"':'').'>'.$this->getLang('level1').'</option>';
         echo '<option value="2" '.(($this->profiles[$no]['depth']==2)?'selected="selected"':'').'>'.$this->getLang('level2').'</option>';
@@ -276,21 +276,21 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
 
 
         echo '<label for="sync__user">'.$this->getLang('user').'</label> ';
-        echo '<input type="text" name="p[user]" id="sync__user" class="edit" value="'.hsc($this->profiles[$no]['user']).'" />';
+        echo '<input type="text" name="prf[user]" id="sync__user" class="edit" value="'.hsc($this->profiles[$no]['user']).'" />';
 
         echo '<label for="sync__pass">'.$this->getLang('pass').'</label> ';
-        echo '<input type="password" name="p[pass]" id="sync__pass" class="edit" value="'.hsc($this->profiles[$no]['pass']).'" />';
+        echo '<input type="password" name="prf[pass]" id="sync__pass" class="edit" value="'.hsc($this->profiles[$no]['pass']).'" />';
 
         echo '<span>'.$this->getLang('type').'</span>';
 
         echo '<div class="type">';
-        echo '<input type="radio" name="p[type]" id="sync__type0" value="0" '.(($this->profiles[$no]['type'] == 0)?'checked="checked"':'').'/>';
+        echo '<input type="radio" name="prf[type]" id="sync__type0" value="0" '.(($this->profiles[$no]['type'] == 0)?'checked="checked"':'').'/>';
         echo '<label for="sync__type0">'.$this->getLang('type0').'</label> ';
 
-        echo '<input type="radio" name="p[type]" id="sync__type1" value="1" '.(($this->profiles[$no]['type'] == 1)?'checked="checked"':'').'/>';
+        echo '<input type="radio" name="prf[type]" id="sync__type1" value="1" '.(($this->profiles[$no]['type'] == 1)?'checked="checked"':'').'/>';
         echo '<label for="sync__type1">'.$this->getLang('type1').'</label> ';
 
-        echo '<input type="radio" name="p[type]" id="sync__type2" value="2" '.(($this->profiles[$no]['type'] == 2)?'checked="checked"':'').'/>';
+        echo '<input type="radio" name="prf[type]" id="sync__type2" value="2" '.(($this->profiles[$no]['type'] == 2)?'checked="checked"':'').'/>';
         echo '<label for="sync__type2">'.$this->getLang('type2').'</label> ';
         echo '</div>';
 
