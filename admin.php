@@ -479,9 +479,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '<tr>
                 <th>'.$this->getLang('file').'</th>
                 <th>'.$this->getLang('local').'</th>
-                <th>&gt;</th>
-                <th>=</th>
-                <th>&lt;</th>
+                <th id="sync__push">&gt;</th>
+                <th id="sync__skip">=</th>
+                <th id="sync__pull">&lt;</th>
                 <th>'.$this->getLang('remote').'</th>
                 <th>'.$this->getLang('diff').'</th>
               </tr>';
@@ -549,19 +549,19 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
 
             echo '<td>';
             if(!isset($item['local'])){
-                echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="2" title="'.$this->getLang('pushdel').'" '.(($dir == 2)?'checked="checked"':'').' />';
+                echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="2" class="syncpush" title="'.$this->getLang('pushdel').'" '.(($dir == 2)?'checked="checked"':'').' />';
             }else{
-                echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="1" title="'.$this->getLang('push').'" '.(($dir == 1)?'checked="checked"':'').' />';
+                echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="1" class="syncpush" title="'.$this->getLang('push').'" '.(($dir == 1)?'checked="checked"':'').' />';
             }
             echo '</td>';
             echo '<td>';
-            echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="0" title="'.$this->getLang('keep').'" '.(($dir == 0)?'checked="checked"':'').' />';
+            echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="0" class="syncskip" title="'.$this->getLang('keep').'" '.(($dir == 0)?'checked="checked"':'').' />';
             echo '</td>';
             echo '<td>';
             if(!isset($item['remote'])){
-                echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="-2" title="'.$this->getLang('pulldel').'" '.(($dir == -2)?'checked="checked"':'').' />';
+                echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="-2" class="syncpull" title="'.$this->getLang('pulldel').'" '.(($dir == -2)?'checked="checked"':'').' />';
             }else{
-                echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="-1" title="'.$this->getLang('pull').'" '.(($dir == -1)?'checked="checked"':'').' />';
+                echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="-1" class="syncpull" title="'.$this->getLang('pull').'" '.(($dir == -1)?'checked="checked"':'').' />';
             }
             echo '</td>';
 
