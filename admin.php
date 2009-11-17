@@ -236,6 +236,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             echo ($no+1).'. ';
             if($opts['user']) echo hsc($opts['user']).'@';
             echo hsc($srv['host']);
+            if($opts['ns']) echo ':'.hsc($opts['ns']);
             echo '</option>';
         }
         echo '</select>';
