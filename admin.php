@@ -62,13 +62,6 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     }
 
     /**
-     * return some info
-     */
-    function getInfo(){
-        return confToHash(dirname(__FILE__).'/info.txt');
-    }
-
-    /**
      * return sort order for position in admin menu
      */
     function getMenuSort() {
