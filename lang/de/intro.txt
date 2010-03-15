@@ -1,4 +1,4 @@
 ====== Wiki-Abgleich ======
 
-Dieses Werkzeug ermöglicht es Ihnen, die Inhalte Ihres Wikis mit denen anderer wikis abzugleichen. Mehrere entfernte Wikis können in verschiedenen Abgleich-Profilen hinterlegt werden. Der Abgleich kann auf susgewählte Namensräume beschränkt werden.
+Dieses Werkzeug ermöglicht es Ihnen, die Inhalte Ihres Wikis mit denen anderer Wikis abzugleichen. Mehrere entfernte Wikis können in verschiedenen Abgleich-Profilen hinterlegt werden. Der Abgleich kann auf ausgewählte Namensräume beschränkt werden.
 

@@ -5,7 +5,7 @@ $lang['menu'] = 'Wikis abgleichen';
 $lang['syncstart'] = 'Abgleich starten';
 $lang['lastsync']  = 'Letzer Abgleich:';
 $lang['remotever'] = 'Entfernte Wiki Version:';
-$lang['noconnect'] = 'Konnte die Version des entfernten Wikis nicht abfragen. Stellen Sie sicher, dass das Wiki XMLRPX-Abfragen zulässt und das die URL korrekt konfiguriert wurde.';
+$lang['noconnect'] = 'Konnte die Version des entfernten Wikis nicht abfragen. Stellen Sie sicher, dass das Wiki XMLRPC-Abfragen zulässt und das die URL korrekt konfiguriert wurde.';
 
 $lang['neversync'] = 'Dieses Profil wurde noch nie verwendet.';
 $lang['profile'] = 'Abgleich-Profil';
@@ -32,7 +32,7 @@ $lang['save'] = 'Speichern';
 $lang['changewarn'] = 'Erneutes Speichern setzt die Abgleichzeiten für diese Profil zurück. Sie müssen dann die Abgleichrichtung für alle Dateien manuell festlegen.';
 
 $lang['lockfail']      = 'Konnte nicht gelockt werden und wird übersprungen:';
-$lang['pullfail']      = 'Runterladen fehlgeschalgen:';
+$lang['pullfail']      = 'Runterladen fehlgeschlagen:';
 $lang['pullok']        = 'Runterladen erfolgreich:';
 $lang['localdelok']    = 'Lokales Löschen erfolgreich:';
 $lang['localdelfail']  = 'Lokales Löschen fehlgeschlagen:';
@@ -47,7 +47,7 @@ $lang['local']  = 'Lokales Wiki';
 $lang['remote'] = 'Entferntes Wiki';
 $lang['diff']   = 'Unterschied';
 
-$lang['push']    = 'Lade lokale version in entferntes Wiki hoch.';
+$lang['push']    = 'Lade lokale Version in entferntes Wiki hoch.';
 $lang['pushdel'] = 'Lösche die Version im entfernten Wiki.';
 $lang['pull']    = 'Lade die Version aus dem entfernten Wiki in das lokale Wiki.';
 $lang['pulldel'] = 'Lösche die lokale Version.';
