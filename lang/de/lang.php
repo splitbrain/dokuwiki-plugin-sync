@@ -3,7 +3,7 @@
 $lang['menu'] = 'Wikis abgleichen';
 
 $lang['syncstart'] = 'Abgleich starten';
-$lang['lastsync']  = 'Letzer Abgleich:';
+$lang['lastsync']  = 'Letzter Abgleich:';
 $lang['remotever'] = 'Entfernte Wiki Version:';
 $lang['noconnect'] = 'Konnte die Version des entfernten Wikis nicht abfragen. Stellen Sie sicher, dass das Wiki XMLRPC-Abfragen zulässt und das die URL korrekt konfiguriert wurde.';
 
