@@ -363,19 +363,19 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         foreach((array) $synclist as $id => $dir){
             @set_time_limit(30);
             if($dir == 0){
-                $this->_listOut($this->getLang('skipped').' '.$id);
+                $this->_listOut($this->getLang('skipped').' '.$id,'skipped');
                 continue;
             }
             if($dir == -2){
                 //delete local
                 if($type == 'pages'){
                     saveWikiText($id,'',$sum,false);
-                    $this->_listOut($this->getLang('localdelok').' '.$id);
+                    $this->_listOut($this->getLang('localdelok').' '.$id,'del_okay');
                 }else{
                     if(unlink(mediaFN($id))){
-                        $this->_listOut($this->getLang('localdelok').' '.$id);
+                        $this->_listOut($this->getLang('localdelok').' '.$id,'del_okay');
                     }else{
-                        $this->_listOut($this->getLang('localdelfail').' '.$id);
+                        $this->_listOut($this->getLang('localdelfail').' '.$id,'del_fail');
                     }
                 }
                 continue;
@@ -389,7 +389,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                 }
                 if(!$ok){
                     $this->_listOut($this->getLang('pullfail').' '.$id.' '.
-                                    $this->client->getErrorMessage(),'error');
+                                    $this->client->getErrorMessage(),'pull_fail');
                     continue;
                 }
                 $data = $this->client->getResponse();
@@ -398,7 +398,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                 }else{
                     io_saveFile(mediaFN($id),base64_decode($data));
                 }
-                $this->_listOut($this->getLang('pullok').' '.$id);
+                $this->_listOut($this->getLang('pullok').' '.$id,'pull_okay');
                 continue;
             }
             if($dir == 1){
@@ -412,10 +412,10 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                 }
                 if(!$ok){
                     $this->_listOut($this->getLang('pushfail').' '.$id.' '.
-                                    $this->client->getErrorMessage(),'error');
+                                    $this->client->getErrorMessage(),'push_fail');
                     continue;
                 }
-                $this->_listOut($this->getLang('pushok').' '.$id);
+                $this->_listOut($this->getLang('pushok').' '.$id,'push_okay');
                 continue;
             }
             if($dir == 2){
@@ -427,10 +427,10 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                 }
                 if(!$ok){
                     $this->_listOut($this->getLang('remotedelfail').' '.$id.' '.
-                                    $this->client->getErrorMessage(),'error');
+                                    $this->client->getErrorMessage(),'del_fail');
                     continue;
                 }
-                $this->_listOut($this->getLang('remotedelok').' '.$id);
+                $this->_listOut($this->getLang('remotedelok').' '.$id,'del_okay');
                 continue;
             }
         }
@@ -641,6 +641,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                     array('depth' => (int) $this->profiles[$no]['depth'],
                           'hash' => true), $dir);
         }
+
         // put into synclist
         foreach($local as $item){
             // skip identical files
