@@ -1,0 +1,60 @@
+<?php
+
+$lang['menu'] = 'Wiki Synchronisation';
+
+$lang['syncstart'] = 'lancer la Synchronisation';
+$lang['lastsync']  = 'Dernière Synchronisation:';
+$lang['remotever'] = 'Version du Wiki distant:';
+
+$lang['xmlerr']   = 'Impossible de communiquer avec le wiki distant. Assurez-vous que celui si permet des demandes XMLRPC à distance et que vous avez correctement configuré le paramètre URL.';
+$lang['loginerr'] = 'Échec de la connexion au Wiki distant. Assurez-vous que les informations d\'identification fournies sont valables sur le wiki distant.';
+$lang['versionerr'] = 'La version de l\'API XMLRPC du Wiki distant est trop ancienne. Vous devez mettre à jour le wiki distant pour utiliser le plugin synchronisation.';
+
+$lang['neversync'] = 'Ce profil n\'a jamais été synchronisés avant.';
+$lang['profile'] = 'Sync Profile';
+$lang['newprofile'] = 'Nouveau Profile...';
+$lang['select'] = 'Selection';
+$lang['create'] = 'Créer un nouveau Profile de Sync.';
+$lang['edit'] = 'Editer le Profile de Sync.';
+
+$lang['server'] = 'XMLRPC URL';
+$lang['user']   = 'Nom d\'usage';
+$lang['pass']   = 'Mot de Pass';
+$lang['ns']     = 'Espace de Nom';
+$lang['depth']  = 'Mode de Sync.';
+$lang['level0'] = 'Tout les espaces de nom';
+$lang['level1'] = 'Aucun des espaces de noms';
+$lang['level2'] = 'Espace de noms + 1 sous espace de noms';
+$lang['level3'] = 'Espace de noms + 2 sous espace de noms';
+$lang['type']   = 'Synchroniser quoi';
+$lang['type0']  = 'Tout';
+$lang['type1']  = 'Pages seulement';
+$lang['type2']  = 'Fichiers Multimédia';
+
+
+$lang['save'] = 'Sauvegarder';
+$lang['changewarn'] = 'Réenregistrer ce profil réinitialiser le temps de synchronisation. Vous devez choisir manuellement le mode de synchronisation pour tous les fichiers sur la prochaine synchronisation.';
+
+$lang['lockfail']      = 'Impossible de verrouiller alors ignoré:';
+$lang['pullfail']      = 'Envoi raté:';
+$lang['pullok']        = 'Envoie réussit:';
+$lang['localdelok']    = 'local delete succeded:';
+$lang['localdelfail']  = 'local delete failed:';
+$lang['pushfail']      = 'Envoi raté:';
+$lang['pushok']        = 'Envoi réussit:';
+$lang['remotedelok']   = 'Suppression à distance réussit:';
+$lang['remotedelfail'] = 'Echec de la suppression à distance:';
+$lang['skipped']       = 'Sauté:';
+
+$lang['file']   = 'Page ou fichier multimédia';
+$lang['local']  = 'Wiki Local';
+$lang['remote'] = 'Wiki Distant';
+$lang['diff']   = 'Diff';
+
+$lang['push']    = 'Envoi de la révision locale sur le wiki distant.';
+$lang['pushdel'] = 'Supprimer la révision sur le wiki distant.';
+$lang['pull']    = 'Charger la révision sur le wiki local.';
+$lang['pulldel'] = 'Supprimer la révision sur le wiki local.';
+$lang['keep']    = 'Ignorer ce fichier et garder les deux révisions.';
+
+$lang['syncdone'] = 'Synchronisation terminée.';

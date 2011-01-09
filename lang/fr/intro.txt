@@ -1,0 +1,3 @@
+====== Wiki Synchronization ======
+
+Cet outil vous permet de synchroniser le contenu de votre wiki avec d'autres wikis. De nombreux autres wikis peuvent être configurés en utilisant des profils de synchronisation. La synchronisation peut être limitée à certains espaces de noms.
