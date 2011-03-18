@@ -195,7 +195,6 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         io_deletefromfile($profiles,serialize($this->profiles));
     }
 
-        //io_deletefromfile($profiles, serialize());
     /**
      * Check connection for choosen profile and display last sync date.
      */
