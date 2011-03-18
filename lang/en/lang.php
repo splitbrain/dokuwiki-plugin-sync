@@ -14,9 +14,11 @@ $lang['neversync'] = 'This profile was never synced before.';
 $lang['profile'] = 'Sync Profile';
 $lang['newprofile'] = 'New Profile...';
 $lang['select'] = 'Select';
+$lang['delete'] = 'Delete';
 $lang['create'] = 'Create new Sync Profile';
 $lang['edit'] = 'Edit Sync Profile';
 
+$lang['name']   = 'Profile Name';
 $lang['server'] = 'XMLRPC URL';
 $lang['user']   = 'Username';
 $lang['pass']   = 'Password';
