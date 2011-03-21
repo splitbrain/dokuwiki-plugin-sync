@@ -240,7 +240,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             $srv = parse_url($opts['server']);
 
             echo '<option value="'.hsc($pno).'" '.(($no!=='' && $pno == $no)?'selected="selected"':'').'>';
-            echo ($no+1).'. ';
+            echo ($pno+1).'. ';
             echo hsc($opts['name']);
             echo '</option>';
         }
