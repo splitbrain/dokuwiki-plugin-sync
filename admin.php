@@ -84,6 +84,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         if($_REQUEST['delprofile']){
             $this->_profileDel();
             $this->profno = '';
+            $this->client = null;
         }
     }
 
@@ -192,7 +193,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     function _profileDel(){
         global $conf;
         $profiles = $conf['metadir'].'/sync.profiles';
-        io_deletefromfile($profiles,serialize($this->profiles));
+        unset($this->profiles[$this->profno]);
+        io_saveFile($profiles,serialize($this->profiles));
+        //io_deleteFromFile($profiles,serialize($this->profiles[$this->profno]));
     }
 
     /**
