@@ -195,7 +195,6 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         $profiles = $conf['metadir'].'/sync.profiles';
         unset($this->profiles[$this->profno]);
         io_saveFile($profiles,serialize($this->profiles));
-        //io_deleteFromFile($profiles,serialize($this->profiles[$this->profno]));
     }
 
     /**
