@@ -1,0 +1,4 @@
+====== Sincronización de la Wiki ======
+
+Esta herramienta le permite sincronizar el contenido de su wiki con otras wikis. Múltiples wikis pueden ser configuradas usando perfiles de sincronización. La Sincronización puede ser restringida a ciertos namespaces.
+
