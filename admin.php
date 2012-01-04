@@ -80,6 +80,12 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             // reset the client
             $this->client = null;
         }
+
+        if($_REQUEST['delprofile']){
+            $this->_profileDel();
+            $this->profno = '';
+            $this->client = null;
+        }
     }
 
     /**
@@ -151,6 +157,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             echo $this->locale_xhtml('intro');
 
             echo '<div class="sync_left">';
+
             $this->_profilelist($this->profno);
             if($this->profno !=='' ){
                 echo '<br />';
@@ -180,6 +187,13 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     function _profileSave(){
         global $conf;
         $profiles = $conf['metadir'].'/sync.profiles';
+        io_saveFile($profiles,serialize($this->profiles));
+    }
+    
+    function _profileDel(){
+        global $conf;
+        $profiles = $conf['metadir'].'/sync.profiles';
+        unset($this->profiles[$this->profno]);
         io_saveFile($profiles,serialize($this->profiles));
     }
 
@@ -220,20 +234,19 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     function _profilelist($no=''){
         echo '<form action="" method="post">';
         echo '<fieldset><legend>'.$this->getLang('profile').'</legend>';
-        echo '<select name="no" class="edit"';
+        echo '<select name="no" class="edit">';
         echo '  <option value="">'.$this->getLang('newprofile').'</option>';
         foreach($this->profiles as $pno => $opts){
             $srv = parse_url($opts['server']);
 
             echo '<option value="'.hsc($pno).'" '.(($no!=='' && $pno == $no)?'selected="selected"':'').'>';
-            echo ($no+1).'. ';
-            if($opts['user']) echo hsc($opts['user']).'@';
-            echo hsc($srv['host']);
-            if($opts['ns']) echo ':'.hsc($opts['ns']);
+            echo ($pno+1).'. ';
+            echo hsc($opts['name']);
             echo '</option>';
         }
         echo '</select>';
         echo '<input type="submit" value="'.$this->getLang('select').'" class="button" />';
+        echo '<input type="submit" value="'.$this->getLang('delete').'" class="button" name="delprofile"/>';
         echo '</fieldset>';
         echo '</form>';
     }
@@ -252,6 +265,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '</legend>';
 
         echo '<input type="hidden" name="no" value="'.hsc($no).'" />';
+
+        echo '<label for="sync__name">'.$this->getLang('name').'</label> ';
+        echo '<input type="text" name="prf[name]" id="sync__name" class="edit" value="'.hsc($this->profiles[$no]['name']).'" />';
 
         echo '<label for="sync__server">'.$this->getLang('server').'</label> ';
         echo '<input type="text" name="prf[server]" id="sync__server" class="edit" value="'.hsc($this->profiles[$no]['server']).'" />';
@@ -603,59 +619,61 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         global $conf;
         $no = $this->profno;
         $list = array();
-        $ns = $this->profiles[$no]['ns'];
+        $namespaces = explode(",",$this->profiles[$no]['ns']);
 
-        // get remote file list
-        if($type == 'pages'){
-            $ok = $this->client->query('dokuwiki.getPagelist',$ns,
-                    array('depth' => (int) $this->profiles[$no]['depth'],
-                          'hash' => true));
-        }else{
-            $ok = $this->client->query('wiki.getAttachments',$ns,
-                    array('depth' => (int) $this->profiles[$no]['depth'],
-                          'hash' => true));
-        }
-        if(!$ok){
-            msg('Failed to fetch remote file list. '.
-                $this->client->getErrorMessage(),-1);
-            return false;
-        }
-        $remote = $this->client->getResponse();
-        // put into synclist
-        foreach($remote as $item){
-            $list[$item['id']]['remote'] = $item;
-            unset($list[$item['id']]['remote']['id']);
-        }
-        unset($remote);
+        foreach($namespaces as $ns){
+            // get remote file list
+            if($type == 'pages'){
+                $ok = $this->client->query('dokuwiki.getPagelist',$ns,
+                        array('depth' => (int) $this->profiles[$no]['depth'],
+                              'hash' => true));
+            }else{
+                $ok = $this->client->query('wiki.getAttachments',$ns,
+                        array('depth' => (int) $this->profiles[$no]['depth'],
+                              'hash' => true));
+            }
+            if(!$ok){
+                msg('Failed to fetch remote file list. '.
+                    $this->client->getErrorMessage(),-1);
+                return false;
+            }
+            $remote = $this->client->getResponse();
+            // put into synclist
+            foreach($remote as $item){
+                $list[$item['id']]['remote'] = $item;
+                unset($list[$item['id']]['remote']['id']);
+            }
+            unset($remote);
 
-        // get local file list
-        $local = array();
-        $dir = utf8_encodeFN(str_replace(':', '/', $ns));
-        require_once(DOKU_INC.'inc/search.php');
-        if($type == 'pages'){
-            search($local, $conf['datadir'], 'search_allpages',
-                    array('depth' => (int) $this->profiles[$no]['depth'],
-                          'hash' => true), $dir);
-        }else{
-            search($local, $conf['mediadir'], 'search_media',
-                    array('depth' => (int) $this->profiles[$no]['depth'],
-                          'hash' => true), $dir);
-        }
-
-        // put into synclist
-        foreach($local as $item){
-            // skip identical files
-            if($list[$item['id']]['remote']['hash'] == $item['hash']){
-                unset($list[$item['id']]);
-                continue;
+            // get local file list
+            $local = array();
+            $dir = utf8_encodeFN(str_replace(':', '/', $ns));
+            require_once(DOKU_INC.'inc/search.php');
+            if($type == 'pages'){
+                search($local, $conf['datadir'], 'search_allpages',
+                        array('depth' => (int) $this->profiles[$no]['depth'],
+                              'hash' => true), $dir);
+            }else{
+                search($local, $conf['mediadir'], 'search_media',
+                        array('depth' => (int) $this->profiles[$no]['depth'],
+                              'hash' => true), $dir);
             }
 
-            $list[$item['id']]['local'] = $item;
-            unset($list[$item['id']]['local']['id']);
-        }
-        unset($local);
+            // put into synclist
+            foreach($local as $item){
+                // skip identical files
+                if($list[$item['id']]['remote']['hash'] == $item['hash']){
+                    unset($list[$item['id']]);
+                    continue;
+                }
 
-        ksort($list);
+                $list[$item['id']]['local'] = $item;
+                unset($list[$item['id']]['local']['id']);
+            }
+            unset($local);
+
+            ksort($list);
+        }
         return $list;
     }
 
@@ -688,4 +706,4 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '</table>';
     }
 }
-//Setup VIM: ex: et ts=4 enc=utf-8 :
+//Setup VIM: ex: et ts=4 :
