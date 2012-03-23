@@ -16,6 +16,7 @@ $lang['newprofile'] = 'New Profile...';
 $lang['select'] = 'Select';
 $lang['create'] = 'Create new Sync Profile';
 $lang['edit'] = 'Edit Sync Profile';
+$lang['delete'] = 'Delete Sync Profile';
 
 $lang['server'] = 'XMLRPC URL';
 $lang['user']   = 'Username';

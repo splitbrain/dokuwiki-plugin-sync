@@ -69,12 +69,20 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     }
 
     /**
-     * handle user request
+     * handle profile saving/deleting
      */
     function handle() {
         if(isset($_REQUEST['prf']) && is_array($_REQUEST['prf'])){
-            if($this->profno === '') $this->profno = count($this->profiles);
-            $this->profiles[$this->profno] = $_REQUEST['prf'];
+            if(isset($_REQUEST['sync__delete']) && $this->profno !== ''){
+                // delete profile
+                unset($this->profiles[$this->profno]);
+                $this->profiles = array_values($this->profiles); //reindex
+                $this->profno = '';
+            }else{
+                // add/edit profile
+                if($this->profno === '') $this->profno = count($this->profiles);
+                $this->profiles[$this->profno] = $_REQUEST['prf'];
+            }
             $this->_profileSave();
 
             // reset the client
@@ -288,14 +296,17 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '<label for="sync__type2">'.$this->getLang('type2').'</label> ';
         echo '</div>';
 
-
-
         echo '<div class="submit">';
         echo '<input type="submit" value="'.$this->getLang('save').'" class="button" />';
         if($no !== '' && $this->profiles[$no]['ltime']){
             echo '<small>'.$this->getLang('changewarn').'</small>';
         }
         echo '</div>';
+
+        echo '<div class="submit">';
+        echo '<input name="sync__delete" type="submit" value="'.$this->getLang('delete').'" class="button" />';
+        echo '</div>';
+
         echo '</fieldset>';
         echo '</form>';
     }
