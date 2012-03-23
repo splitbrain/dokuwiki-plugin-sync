@@ -12,9 +12,10 @@ require_once(DOKU_INC.'inc/IXR_Library.php');
  */
 class admin_plugin_sync extends DokuWiki_Admin_Plugin {
 
-    var $profiles = array();
-    var $profno = '';
-    var $client = null;
+    protected $profiles = array();
+    protected $profno = '';
+    protected $client = null;
+    protected $apiversion = 0;
 
     /**
      * Constructor.
@@ -52,7 +53,8 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             $this->client = null;
             return false;
         }
-        if(((int) $this->client->getResponse()) < 1){
+        $this->apiversion = (int) $this->client->getResponse();
+        if($this->apiversion < 1){
             msg($this->getLang('versionerr'),-1);
             $this->client = null;
             return false;
@@ -407,7 +409,10 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                 if($type == 'pages'){
                     saveWikiText($id,$data,$sum,false);
                 }else{
-                    io_saveFile(mediaFN($id),base64_decode($data));
+                    if($this->apiversion < 7){
+                        $data = base64_decode($data);
+                    }
+                    io_saveFile(mediaFN($id),$data);
                 }
                 $this->_listOut($this->getLang('pullok').' '.$id,'pull_okay');
                 continue;
@@ -419,7 +424,12 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                     $ok = $this->client->query('wiki.putPage',$id,$data,array('sum'=>$sum));
                 }else{
                     $data = io_readFile(mediaFN($id),false);
-                    $ok = $this->client->query('wiki.putAttachment',$id,base64_encode($data),array('ow'=>true));
+                    if($this->apiversion < 6){
+                        $data = base64_encode($data);
+                    }else{
+                        $data = new IXR_Base64($data);
+                    }
+                    $ok = $this->client->query('wiki.putAttachment',$id,$data,array('ow'=>true));
                 }
                 if(!$ok){
                     $this->_listOut($this->getLang('pushfail').' '.$id.' '.
