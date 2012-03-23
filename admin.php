@@ -220,7 +220,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     function _profilelist($no=''){
         echo '<form action="" method="post">';
         echo '<fieldset><legend>'.$this->getLang('profile').'</legend>';
-        echo '<select name="no" class="edit"';
+        echo '<select name="no" class="edit">';
         echo '  <option value="">'.$this->getLang('newprofile').'</option>';
         foreach($this->profiles as $pno => $opts){
             $srv = parse_url($opts['server']);
