@@ -39,11 +39,11 @@ $lang['changewarn'] = 'Resaving this profile will reset the sync times. You will
 $lang['lockfail']      = 'couldn\'t lock and will skip:';
 $lang['pullfail']      = 'pull failed:';
 $lang['pullok']        = 'pull succeded:';
-$lang['localdelok']    = 'local delete succeded:';
+$lang['localdelok']    = 'local delete succeeded:';
 $lang['localdelfail']  = 'local delete failed:';
 $lang['pushfail']      = 'push failed:';
 $lang['pushok']        = 'push succeded:';
-$lang['remotedelok']   = 'remote delete succeded:';
+$lang['remotedelok']   = 'remote delete succeeded:';
 $lang['remotedelfail'] = 'remote delete failed:';
 $lang['skipped']       = 'skipped:';
 
