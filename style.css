@@ -73,4 +73,7 @@ div.dokuwiki ul.sync li.pull_fail {
     list-style-image: url(pix/right_fail.png);
 }
 
+th.sync__action{
+    cursor: pointer;
+}
 
