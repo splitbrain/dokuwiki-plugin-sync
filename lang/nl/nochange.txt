@@ -1,0 +1,5 @@
+====== Wikis zijn identiek ======
+
+Er zijn geen verschillen tussen de lokale en de externe wiki. Er is geen reden voor synchronisatie.
+
+

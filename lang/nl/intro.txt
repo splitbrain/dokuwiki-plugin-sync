@@ -1,0 +1,4 @@
+====== Wiki Synchronisatie ======
+
+Dit hulpmiddel stelt u in staat om de inhoud van uw wiki te synchroniseren met andere wiki's. Meerdere andere wiki's kunnen worden ingesteld met behulp van de synchronisatie profielen. Synchronisatie kan worden beperkt tot bepaalde naamruimten.
+
