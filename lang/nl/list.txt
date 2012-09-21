@@ -1,0 +1,4 @@
+====== Bestanden om te Synchroniseren ======
+
+Een lijst met bestanden die verschillen tussen uw lokale en de externe wiki wordt hieronder weergegeven. U dient de revisies die u wilt bewaren te selecteren.
+
