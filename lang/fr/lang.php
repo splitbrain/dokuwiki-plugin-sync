@@ -19,7 +19,7 @@ $lang['edit'] = 'Editer le Profile de Sync.';
 
 $lang['server'] = 'XMLRPC URL';
 $lang['user']   = 'Nom d\'usage';
-$lang['pass']   = 'Mot de Pass';
+$lang['pass']   = 'Mot de Passe';
 $lang['ns']     = 'Espace de Nom';
 $lang['depth']  = 'Mode de Sync.';
 $lang['level0'] = 'Tout les espaces de nom';
