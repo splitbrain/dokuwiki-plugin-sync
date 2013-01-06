@@ -33,16 +33,16 @@ $lang['type2']  = 'Fichiers Multimédia';
 
 
 $lang['save'] = 'Sauvegarder';
-$lang['changewarn'] = 'Réenregistrer ce profil réinitialiser le temps de synchronisation. Vous devez choisir manuellement le mode de synchronisation pour tous les fichiers sur la prochaine synchronisation.';
+$lang['changewarn'] = 'Réenregistrer ce profil réinitialisera les dates de synchronisation. Vous devrez choisir manuellement le mode de synchronisation pour tous les fichiers sur la prochaine synchronisation.';
 
 $lang['lockfail']      = 'Impossible de verrouiller alors ignoré:';
-$lang['pullfail']      = 'Envoi raté:';
-$lang['pullok']        = 'Envoie réussit:';
-$lang['localdelok']    = 'local delete succeded:';
-$lang['localdelfail']  = 'local delete failed:';
+$lang['pullfail']      = 'Réception échouée:';
+$lang['pullok']        = 'Réception réussie:';
+$lang['localdelok']    = 'Suppression locale réussie';
+$lang['localdelfail']  = 'Suppression locale échouée:';
 $lang['pushfail']      = 'Envoi raté:';
-$lang['pushok']        = 'Envoi réussit:';
-$lang['remotedelok']   = 'Suppression à distance réussit:';
+$lang['pushok']        = 'Envoi réussi:';
+$lang['remotedelok']   = 'Suppression à distance réussie:';
 $lang['remotedelfail'] = 'Echec de la suppression à distance:';
 $lang['skipped']       = 'Sauté:';
 
