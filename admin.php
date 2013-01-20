@@ -16,6 +16,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     protected $profno = '';
     protected $client = null;
     protected $apiversion = 0;
+    protected $defaultTimeout = 15;
 
     /**
      * Constructor.
@@ -28,6 +29,12 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     function _connect(){
         if(!is_null($this->client)) return true;
         $this->client = new IXR_Client($this->profiles[$this->profno]['server']);
+        if ( isset($this->profiles[$this->profno]['timeout']) ){
+          $timeout = (int) $this->profiles[$this->profno]['timeout'];
+        } else {
+          $timeout = $this->defaultTimeout;
+        }
+        $this->client->timeout = $timeout;
 
         // do the login
         if($this->profiles[$this->profno]['user']){
@@ -83,6 +90,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             }else{
                 // add/edit profile
                 if($this->profno === '') $this->profno = count($this->profiles);
+                if ( !isset($_REQUEST['prf']['timeout']) || !is_numeric($_REQUEST['prf']['timeout']) ){
+                  $_REQUEST['prf']['timeout'] = $this->defaultTimeout;
+                }
                 $this->profiles[$this->profno] = $_REQUEST['prf'];
             }
             $this->_profileSave();
@@ -285,6 +295,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '<label for="sync__pass">'.$this->getLang('pass').'</label> ';
         echo '<input type="password" name="prf[pass]" id="sync__pass" class="edit" value="'.hsc($this->profiles[$no]['pass']).'" />';
 
+        echo '<label for="sync__timeout">'.$this->getLang('timeout').'</label>';
+        echo '<input type="number" name="prf[timeout]" id="sync__timeout" class="edit" value="'.hsc($this->profiles[$no]['timeout']).'" />';
+
         echo '<span>'.$this->getLang('type').'</span>';
 
         echo '<div class="type">';
@@ -297,6 +310,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         echo '<input type="radio" name="prf[type]" id="sync__type2" value="2" '.(($this->profiles[$no]['type'] == 2)?'checked="checked"':'').'/>';
         echo '<label for="sync__type2">'.$this->getLang('type2').'</label> ';
         echo '</div>';
+
 
         echo '<div class="submit">';
         echo '<input type="submit" value="'.$this->getLang('save').'" class="button" />';

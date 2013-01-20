@@ -59,3 +59,4 @@ $lang['pulldel'] = 'Delete local revision.';
 $lang['keep']    = 'Skip this file and keep both revisions as is.';
 
 $lang['syncdone'] = 'Synchronization finished.';
+$lang['timeout'] = 'Timeout';
