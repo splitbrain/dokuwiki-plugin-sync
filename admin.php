@@ -16,6 +16,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     protected $profno = '';
     protected $client = null;
     protected $apiversion = 0;
+    protected $defaultTimeout = 15;
 
     /**
      * Constructor.
@@ -31,7 +32,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         if ( isset($this->profiles[$this->profno]['timeout']) ){
           $timeout = (int) $this->profiles[$this->profno]['timeout'];
         } else {
-          $timeout = 15; //default legacy value
+          $timeout = $this->defaultTimeout;
         }
         $this->client->timeout = $timeout;
 
@@ -89,7 +90,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             }else{
                 // add/edit profile
                 if($this->profno === '') $this->profno = count($this->profiles);
-                $_REQUEST['prf']['timeout'] = (int) $_REQUEST['prf']['timeout'];
+                if ( !isset($_REQUEST['prf']['timeout']) || !is_numeric($_REQUEST['prf']['timeout']) ){
+                  $_REQUEST['prf']['timeout'] = $this->defaultTimeout;
+                }
                 $this->profiles[$this->profno] = $_REQUEST['prf'];
             }
             $this->_profileSave();
