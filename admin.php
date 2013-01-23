@@ -151,11 +151,17 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                    $this->profiles[$this->profno]['type'] == 1){
                     $pages = $this->_getSyncList('pages');
                 }
-                if($this->profiles[$this->profno]['type'] == 0 ||
-                   $this->profiles[$this->profno]['type'] == 2){
+                if(($this->profiles[$this->profno]['type'] == 0 ||
+                   $this->profiles[$this->profno]['type'] == 2)
+                    && $pages !== false ){
                     $media = $this->_getSyncList('media');
                 }
             }
+
+            if ( $pages === false || $media === false ){
+              return;
+            }
+
             if(count($pages) || count($media)){
                 $this->_directionFormStart($lnow,$rnow);
                 if(count($pages))
