@@ -1,7 +1,7 @@
 base   sync
 author Andreas Gohr
 email  andi@splitbrain.org
-date   2012-03-23
+date   2013-01-20
 name   DokuWiki Synchronization Plugin
 desc   Syncs a namespace with a remote wiki on request
 url    http://www.dokuwiki.org/plugin:sync
