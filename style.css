@@ -77,3 +77,18 @@ th.sync__action{
     cursor: pointer;
 }
 
+#sync__direction__table {
+	table-layout: fixed;
+	width: 100%;
+}
+
+#sync__direction__table .sync__file {
+	width: 50%;
+}
+
+#sync__direction__table .sync__push,
+#sync__direction__table .sync__skip,
+#sync__direction__table .sync__pull {
+	width: 3%;
+}
+
