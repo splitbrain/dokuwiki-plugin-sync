@@ -507,18 +507,18 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         $no = $this->profno;
         echo $this->locale_xhtml('list');
         echo '<form action="" method="post">';
-        echo '<table class="inline">';
+        echo '<table class="inline" id="sync__direction__table">';
         echo '<input type="hidden" name="lnow" value="'.$lnow.'" />';
         echo '<input type="hidden" name="rnow" value="'.$rnow.'" />';
         echo '<input type="hidden" name="no" value="'.$no.'" />';
         echo '<tr>
-                <th>'.$this->getLang('file').'</th>
-                <th>'.$this->getLang('local').'</th>
-                <th id="sync__push">&gt;</th>
-                <th id="sync__skip">=</th>
-                <th id="sync__pull">&lt;</th>
-                <th>'.$this->getLang('remote').'</th>
-                <th>'.$this->getLang('diff').'</th>
+                <th class="sync__file">'.$this->getLang('file').'</th>
+                <th class="sync__local">'.$this->getLang('local').'</th>
+                <th class="sync__push" id="sync__push">&gt;</th>
+                <th class="sync__skip" id="sync__skip">=</th>
+                <th class="sync__pull" id="sync__pull">&lt;</th>
+                <th class="sync__remote">'.$this->getLang('remote').'</th>
+                <th class="sync__diff">'.$this->getLang('diff').'</th>
               </tr>';
     }
 
@@ -572,27 +572,27 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
 
             echo '<tr>';
 
-            echo '<td>'.hsc($id).'</td>';
-            echo '<td>';
+            echo '<td class="sync__file">'.hsc($id).'</td>';
+            echo '<td class="sync__local">';
             if(!isset($item['local'])){
                 echo '&mdash;';
             }else{
-                echo strftime($conf['dformat'],$item['local']['mtime']);
-                echo ' ('.$item['local']['size'].' bytes)';
+                echo '<div>'.strftime($conf['dformat'],$item['local']['mtime']).'</div>';
+                echo ' <div>('.$item['local']['size'].' bytes)</div>';
             }
             echo '</td>';
 
-            echo '<td>';
+            echo '<td class="sync__push">';
             if(!isset($item['local'])){
                 echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="2" class="syncpush" title="'.$this->getLang('pushdel').'" '.(($dir == 2)?'checked="checked"':'').' />';
             }else{
                 echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="1" class="syncpush" title="'.$this->getLang('push').'" '.(($dir == 1)?'checked="checked"':'').' />';
             }
             echo '</td>';
-            echo '<td>';
+            echo '<td class="sync__skip">';
             echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="0" class="syncskip" title="'.$this->getLang('keep').'" '.(($dir == 0)?'checked="checked"':'').' />';
             echo '</td>';
-            echo '<td>';
+            echo '<td class="sync__pull">';
             if(!isset($item['remote'])){
                 echo '<input type="radio" name="sync_'.$type.'['.hsc($id).']" value="-2" class="syncpull" title="'.$this->getLang('pulldel').'" '.(($dir == -2)?'checked="checked"':'').' />';
             }else{
@@ -600,16 +600,16 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             }
             echo '</td>';
 
-            echo '<td>';
+            echo '<td class="sync__remote">';
             if(!isset($item['remote'])){
                 echo '&mdash;';
             }else{
-                echo strftime($conf['dformat'],$item['remote']['mtime']);
-                echo ' ('.$item['remote']['size'].' bytes)';
+                echo '<div>'.strftime($conf['dformat'],$item['remote']['mtime']).'</div>';
+                echo ' <div>('.$item['remote']['size'].' bytes)</div>';
             }
             echo '</td>';
 
-            echo '<td>';
+            echo '<td class="sync__diff">';
             if($type == 'pages'){
                 echo '<a href="'.DOKU_BASE.'lib/plugins/sync/diff.php?id='.$id.'&amp;no='.$no.'" target="_blank" class="sync_popup">'.$this->getLang('diff').'</a>';
             }
