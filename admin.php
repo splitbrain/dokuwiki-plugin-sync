@@ -428,6 +428,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                 $data = $this->client->getResponse();
                 if($type == 'pages'){
                     saveWikiText($id,$data,$sum,false);
+                    idx_addPage($id);
                 }else{
                     if($this->apiversion < 7){
                         $data = base64_decode($data);
