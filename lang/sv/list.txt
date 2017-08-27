@@ -1,0 +1,3 @@
+====== Filer att synkronisera ======
+
+En lista var som skiljer mellan din lokala och fjärrwiki visas nedan. Du behöver besluta vilken version du vill behålla.
