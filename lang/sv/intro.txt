@@ -1,0 +1,3 @@
+====== Wiki-synkronisering ======
+
+Detta verktyg låter dig synkronisera innehållet på din wiki med andra wikis. Multipla wikis kan ställas in genom synkroniseringsprofiler. Synkronisering kan begränsas till vissa namnrymder.
