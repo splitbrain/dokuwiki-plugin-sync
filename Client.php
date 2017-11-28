@@ -23,7 +23,7 @@ class Client extends \IXR_Client {
     /** @inheritdoc */
     function query() {
         $ok = call_user_func_array('parent::query', func_get_args());
-        if(!$ok) throw new FatalException($this->getErrorMessage(), $this->getErrorCode());
+        if(!$ok) throw new SyncException($this->getErrorMessage(), $this->getErrorCode());
         return $ok;
     }
 
@@ -32,26 +32,26 @@ class Client extends \IXR_Client {
      *
      * @param string $user
      * @param string $pass
-     * @throws FatalException
+     * @throws SyncException
      */
     protected function login($user, $pass) {
         $this->query('dokuwiki.login', $user, $pass);
         if(!$this->getResponse()) {
-            throw new FatalException('loginerr', $this->getErrorCode());
+            throw new SyncException('loginerr', $this->getErrorCode());
         }
     }
 
     /**
      * Ensures the API version matches our expectations
      *
-     * @throws FatalException
+     * @throws SyncException
      */
     protected function ensureAPIversionOk() {
         $this->query('dokuwiki.getXMLRPCAPIVersion');
 
         $apiversion = (int) $this->getResponse();
         if($apiversion < self::MIN_API) {
-            throw new FatalException('versionerr');
+            throw new SyncException('versionerr');
         }
     }
 }

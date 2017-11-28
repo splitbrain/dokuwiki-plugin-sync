@@ -85,11 +85,11 @@ class Profile {
      * @param string $type pages|media
      * @param string $id the ID of the page or media
      * @param string $summary the editing summary
-     * @throws FatalException
+     * @throws SyncException
      */
     protected function syncPull($type, $id, $summary) {
         if($type == 'pages') {
-            if(checklock($id)) throw new FatalException('Local file is locked');
+            if(checklock($id)) throw new SyncException('Local file is locked');
             $this->client->query('wiki.getPage', $id);
         } else {
             $this->client->query('wiki.getAttachment', $id);
@@ -110,14 +110,14 @@ class Profile {
      * @param string $type pages|media
      * @param string $id the ID of the page or media
      * @param string $summary the editing summary
-     * @throws FatalException
+     * @throws SyncException
      */
     protected function syncPullDelete($type, $id, $summary) {
         if($type == 'pages') {
-            if(checklock($id)) throw new FatalException('Local file is locked');
+            if(checklock($id)) throw new SyncException('Local file is locked');
             saveWikiText($id, '', $summary, false);
         } else {
-            if(!unlink(mediaFN($id))) throw new FatalException('File deletion failed');
+            if(!unlink(mediaFN($id))) throw new SyncException('File deletion failed');
         }
     }
 
@@ -127,7 +127,7 @@ class Profile {
      * @param string $type pages|media
      * @param string $id the ID of the page or media
      * @param string $summary the editing summary
-     * @throws FatalException
+     * @throws SyncException
      */
     protected function syncPush($type, $id, $summary) {
         if($type == 'pages') {
@@ -148,7 +148,7 @@ class Profile {
      * @param string $type pages|media
      * @param string $id the ID of the page or media
      * @param string $summary the editing summary
-     * @throws FatalException
+     * @throws SyncException
      */
     protected function syncPushDelete($type, $id, $summary) {
         if($type == 'pages') {
@@ -165,7 +165,7 @@ class Profile {
      *
      * @param string $id
      * @param bool $state is this a lock (true) or unlock (false)
-     * @throws FatalException
+     * @throws SyncException
      */
     protected function setRemoteLock($id, $state) {
         if($state) {
@@ -179,7 +179,7 @@ class Profile {
         $this->client->query('dokuwiki.setLocks', array('lock' => $lock, 'unlock' => $unlock));
         $data = $this->client->getResponse();
         if(count((array) $data['lockfail'])) {
-            throw new FatalException('Locking at the remote wiki failed');
+            throw new SyncException('Locking at the remote wiki failed');
         }
     }
 
