@@ -40,7 +40,43 @@ class Profile {
     }
 
     /**
+     * Access the config that initialized this profile
+     *
+     * @return array
+     */
+    public function getConfig() {
+        return $this->config;
+    }
+
+    /**
+     * Return the remote wiki's version
+     *
+     * This is used for testing the connection
+     *
+     * @return string
+     */
+    public function getRemotVersion() {
+        $this->client->query('dokuwiki.getVersion');
+        return $this->client->getResponse();
+    }
+
+    /**
+     * Get the current local and remote time
+     *
+     * @return int[] the local and remote timestamps
+     */
+    public function getTimes() {
+        $this->client->query('dokuwiki.getTime');
+        $rtime = $this->client->getResponse();
+        $ltime = time();
+        return array($ltime, $rtime);
+    }
+
+    /**
      * Get a list of changed files
+     *
+     * @param string $type pages|media
+     * @return array
      */
     public function getSyncList($type) {
         $this->fetchRemoteFileList($type);
