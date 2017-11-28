@@ -85,24 +85,27 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
      * handle profile saving/deleting
      */
     function handle() {
-        if(isset($_REQUEST['prf']) && is_array($_REQUEST['prf'])) {
-            if(isset($_REQUEST['sync__delete']) && $this->profno !== false) {
-                // delete profile
-                unset($this->profiles[$this->profno]);
-                $this->profiles = array_values($this->profiles); //reindex
-                $this->profno = '';
-            } else {
-                // add/edit profile
-                if($this->profno === '') $this->profno = count($this->profiles);
-                if(!isset($_REQUEST['prf']['timeout']) || !is_numeric($_REQUEST['prf']['timeout'])) {
-                    $_REQUEST['prf']['timeout'] = $this->defaultTimeout;
-                }
-                $this->profiles[$this->profno] = $_REQUEST['prf'];
-            }
-            $this->_profileSave();
+        global $INPUT;
 
-            // reset the client
-            $this->client = null;
+        $profile = $INPUT->arr('prf');
+        if(!$profile) return;
+
+        if(!checkSecurityToken()) return;
+
+        try {
+            if($INPUT->has('sync__delete') && $this->profno !== false) {
+                // profile deletion
+                $this->profileManager->deleteProfileConfig($this->profno);
+                $this->profno = false;
+                $INPUT->remove('prf');
+                msg('profile deleted', 1);
+            } else {
+                // profile add/edit
+                $this->profno = $this->profileManager->setProfileConfig($this->profno, $profile);
+                msg('profile saved', 1);
+            }
+        } catch(\dokuwiki\plugin\sync\SyncException $e) {
+            msg(hsc($e->getMessage()), -1);
         }
     }
 
@@ -211,7 +214,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         $profiles[''] = $this->getLang('newprofile');
 
         $form->addFieldsetOpen($this->getLang('profile'));
-        $form->addDropdown('no', $profiles);
+        $form->addDropdown('no', $profiles)->val($this->profno);
         $form->addButton('', $this->getLang('select'));
         $form->addFieldsetClose();
 
@@ -226,6 +229,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             [
                 'action' => wl('', ['do' => 'admin', 'page' => 'sync'], false, '&'),
                 'method' => 'POST',
+                'class' => 'sync_profile',
             ]
         );
 
@@ -238,15 +242,15 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         }
 
         $depths = [
-            0 => $this->getLang('level0'),
-            1 => $this->getLang('level1'),
-            2 => $this->getLang('level2'),
-            3 => $this->getLang('level3'),
+            ['label' => $this->getLang('level0'), 'attr' => ['value' => '0']],
+            ['label' => $this->getLang('level1'), 'attr' => ['value' => '1']],
+            ['label' => $this->getLang('level2'), 'attr' => ['value' => '2']],
+            ['label' => $this->getLang('level3'), 'attr' => ['value' => '3']],
         ];
         $types = [
-            0 => $this->getLang('type0'),
-            1 => $this->getLang('type1'),
-            2 => $this->getLang('type2'),
+            ['label' => $this->getLang('type0'), 'attr' => ['value' => '0']],
+            ['label' => $this->getLang('type1'), 'attr' => ['value' => '1']],
+            ['label' => $this->getLang('type2'), 'attr' => ['value' => '2']],
         ];
 
         $form->addFieldsetOpen($legend);
@@ -261,9 +265,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         $form->addDropdown('prf[type]', $types, $this->getLang('type'))->val($profile['type']);
         $form->addButton('', $this->getLang('save'))->attr('type', 'submit');
 
-//        if($no !== '' && $this->profiles[$no]['ltime']) {
-//            echo '<small>' . $this->getLang('changewarn') . '</small>';
-//        }
+        if($this->profno !== false && !empty($profile['ltime'])) {
+            echo '<small>' . $this->getLang('changewarn') . '</small>';
+        }
 
         $form->addFieldsetClose();
 

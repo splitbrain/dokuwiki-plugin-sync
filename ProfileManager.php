@@ -6,6 +6,10 @@ class ProfileManager {
 
     protected $profiles = [];
 
+    public function __construct() {
+        $this->load();
+    }
+
     /**
      * Return a list of all available profiles
      *
@@ -51,25 +55,30 @@ class ProfileManager {
             'user' => '',
             'pass' => '',
             'timeout' => 15,
+            'type' => 0,
         ];
     }
 
     /**
      * Set the given config for the given profile
      *
-     * When $num is null, the data is added to a new profile
+     * When $num is false, the data is added to a new profile
      *
-     * @param int|null $num
+     * @param int|false $num
      * @param $data
+     * @return int the index of the saved profile
      */
     public function setProfileConfig($num, $data) {
-        if($num !== null && isset($this->profiles[$num])) {
+        if($num === false || !isset($this->profiles[$num])) {
+            $num = count($this->profiles);
+        }
+        if(isset($this->profiles[$num])) {
             $this->profiles[$num] = array_merge($this->profiles[$num], $data);
         } else {
             $this->profiles[$num] = $data;
         }
-
         $this->save();
+        return $num;
     }
 
     /**
@@ -81,6 +90,8 @@ class ProfileManager {
         $labels = [];
         foreach($this->profiles as $idx => $profile) {
             $label = parse_url($profile['server'], PHP_URL_HOST);
+            if($label === null) $label = $profile['server'];
+            $label = ($idx + 1) . '. ' . $label;
             if($profile['user'] !== '') $label = $profile['user'] . '@' . $label;
             if($profile['ns'] !== '') $label .= ':' . $profile['ns'];
             $labels[$idx] = $label;
