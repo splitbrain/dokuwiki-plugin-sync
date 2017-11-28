@@ -4,7 +4,7 @@ namespace dokuwiki\plugin\sync;
 
 class Client extends \IXR_Client {
 
-    const MIN_API = 1;
+    const MIN_API = 7;
 
     /**
      * Client constructor.
