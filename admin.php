@@ -1,10 +1,9 @@
 <?php
+use dokuwiki\Form\Form;
+use dokuwiki\plugin\sync\ProfileManager;
+
 // must be run within Dokuwiki
 if(!defined('DOKU_INC')) die();
-if(!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN', DOKU_INC . 'lib/plugins/');
-require_once(DOKU_PLUGIN . 'admin.php');
-
-require_once(DOKU_INC . 'inc/IXR_Library.php');
 
 /**
  * All DokuWiki plugins to extend the admin function
@@ -12,19 +11,29 @@ require_once(DOKU_INC . 'inc/IXR_Library.php');
  */
 class admin_plugin_sync extends DokuWiki_Admin_Plugin {
 
-    protected $profiles       = array();
-    protected $profno         = '';
     /** @var IXR_Client */
     protected $client         = null;
     protected $apiversion     = 0;
     protected $defaultTimeout = 15;
 
+    protected $profileManager;
+    protected $profno;
+
     /**
      * Constructor.
      */
     function __construct() {
-        $this->_profileLoad();
-        $this->profno = preg_replace('/[^0-9]+/', '', $_REQUEST['no']);
+        global $INPUT;
+
+        $this->profileManager = new ProfileManager();
+        $this->profno = $INPUT->int('no', false);
+    }
+
+    /**
+     * return sort order for position in admin menu
+     */
+    function getMenuSort() {
+        return 1020;
     }
 
     function _connect() {
@@ -73,18 +82,11 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     }
 
     /**
-     * return sort order for position in admin menu
-     */
-    function getMenuSort() {
-        return 1020;
-    }
-
-    /**
      * handle profile saving/deleting
      */
     function handle() {
         if(isset($_REQUEST['prf']) && is_array($_REQUEST['prf'])) {
-            if(isset($_REQUEST['sync__delete']) && $this->profno !== '') {
+            if(isset($_REQUEST['sync__delete']) && $this->profno !== false) {
                 // delete profile
                 unset($this->profiles[$this->profno]);
                 $this->profiles = array_values($this->profiles); //reindex
@@ -182,16 +184,96 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             echo $this->locale_xhtml('intro');
 
             echo '<div class="sync_left">';
-            $this->_profilelist($this->profno);
-            if($this->profno !== '') {
+            $this->profileDropdown();
+            if($this->profno !== false) {
                 echo '<br />';
                 $this->_profileView();
             }
             echo '</div>';
             echo '<div class="sync_right">';
-            $this->_profileform($this->profno);
+            $this->profileForm();
             echo '</div>';
         }
+    }
+
+    /**
+     * Dropdown list of available sync profiles
+     */
+    protected function profileDropdown() {
+        $form = new Form(
+            [
+                'action' => wl('', ['do' => 'admin', 'page' => 'sync'], false, '&'),
+                'method' => 'POST',
+            ]
+        );
+
+        $profiles = $this->profileManager->getProfileLabels();
+        $profiles[''] = $this->getLang('newprofile');
+
+        $form->addFieldsetOpen($this->getLang('profile'));
+        $form->addDropdown('no', $profiles);
+        $form->addButton('', $this->getLang('select'));
+        $form->addFieldsetClose();
+
+        echo $form->toHTML();
+    }
+
+    /**
+     * Form to edit or create a sync profile
+     */
+    protected function profileForm() {
+        $form = new Form(
+            [
+                'action' => wl('', ['do' => 'admin', 'page' => 'sync'], false, '&'),
+                'method' => 'POST',
+            ]
+        );
+
+        if($this->profno === false) {
+            $legend = $this->getLang('create');
+            $profile = $this->profileManager->getEmptyConfig();
+        } else {
+            $legend = $this->getLang('edit');
+            $profile = $this->profileManager->getProfileConfig($this->profno);
+        }
+
+        $depths = [
+            0 => $this->getLang('level0'),
+            1 => $this->getLang('level1'),
+            2 => $this->getLang('level2'),
+            3 => $this->getLang('level3'),
+        ];
+        $types = [
+            0 => $this->getLang('type0'),
+            1 => $this->getLang('type1'),
+            2 => $this->getLang('type2'),
+        ];
+
+        $form->addFieldsetOpen($legend);
+        $form->setHiddenField('no', $this->profno);
+        $form->addTextInput('prf[server]', $this->getLang('server'))->val($profile['server']);
+        $form->addHTML('<samp>http://example.com/dokuwiki/lib/exe/xmlrpc.php</samp>');
+        $form->addTextInput('prf[ns]', $this->getLang('ns'))->val($profile['ns']);
+        $form->addDropdown('prf[depth]', $depths, $this->getLang('depth'))->val($profile['depth']);
+        $form->addTextInput('prf[user]', $this->getLang('user'))->val($profile['user']);
+        $form->addPasswordInput('prf[pass]', $this->getLang('pass'))->val($profile['pass']);
+        $form->addTextInput('prf[timeout]', $this->getLang('timeout'))->val($profile['timeout']);
+        $form->addDropdown('prf[type]', $types, $this->getLang('type'))->val($profile['type']);
+        $form->addButton('', $this->getLang('save'))->attr('type', 'submit');
+
+//        if($no !== '' && $this->profiles[$no]['ltime']) {
+//            echo '<small>' . $this->getLang('changewarn') . '</small>';
+//        }
+
+        $form->addFieldsetClose();
+
+        if($this->profno !== false) {
+            $form->addFieldsetOpen($this->getLang('delete'));
+            $form->addButton('sync__delete', $this->getLang('delete'));
+            $form->addFieldsetClose();
+        }
+
+        echo $form->toHTML();
     }
 
     /**
@@ -241,97 +323,6 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         } else {
             echo '<p class="error">' . $this->getLang('noconnect') . '<br />' . hsc($this->client->getErrorMessage()) . '</p>';
         }
-        echo '</fieldset>';
-        echo '</form>';
-    }
-
-    /**
-     * Dropdown list of available sync profiles
-     */
-    function _profilelist($no = '') {
-        echo '<form action="" method="post">';
-        echo '<fieldset><legend>' . $this->getLang('profile') . '</legend>';
-        echo '<select name="no" class="edit">';
-        echo '  <option value="">' . $this->getLang('newprofile') . '</option>';
-        foreach($this->profiles as $pno => $opts) {
-            $srv = parse_url($opts['server']);
-
-            echo '<option value="' . hsc($pno) . '" ' . (($no !== '' && $pno == $no) ? 'selected="selected"' : '') . '>';
-            echo ($pno + 1) . '. ';
-            if($opts['user']) echo hsc($opts['user']) . '@';
-            echo hsc($srv['host']);
-            if($opts['ns']) echo ':' . hsc($opts['ns']);
-            echo '</option>';
-        }
-        echo '</select>';
-        echo '<input type="submit" value="' . $this->getLang('select') . '" class="button" />';
-        echo '</fieldset>';
-        echo '</form>';
-    }
-
-    /**
-     * Form to edit or create a sync profile
-     */
-    function _profileform($no = '') {
-        echo '<form action="" method="post" class="sync_profile">';
-        echo '<fieldset><legend>';
-        if($no !== '') {
-            echo $this->getLang('edit');
-        } else {
-            echo $this->getLang('create');
-        }
-        echo '</legend>';
-
-        echo '<input type="hidden" name="no" value="' . hsc($no) . '" />';
-
-        echo '<label for="sync__server">' . $this->getLang('server') . '</label> ';
-        echo '<input type="text" name="prf[server]" id="sync__server" class="edit" value="' . hsc($this->profiles[$no]['server']) . '" />';
-        echo '<samp>http://example.com/dokuwiki/lib/exe/xmlrpc.php</samp>';
-
-        echo '<label for="sync__ns">' . $this->getLang('ns') . '</label> ';
-        echo '<input type="text" name="prf[ns]" id="sync__ns" class="edit" value="' . hsc($this->profiles[$no]['ns']) . '" />';
-
-        echo '<label for="sync__depth">' . $this->getLang('depth') . '</label> ';
-        echo '<select name="prf[depth]" id="sync__depth" class="edit">';
-        echo '<option value="0" ' . (($this->profiles[$no]['depth'] == 0) ? 'selected="selected"' : '') . '>' . $this->getLang('level0') . '</option>';
-        echo '<option value="1" ' . (($this->profiles[$no]['depth'] == 1) ? 'selected="selected"' : '') . '>' . $this->getLang('level1') . '</option>';
-        echo '<option value="2" ' . (($this->profiles[$no]['depth'] == 2) ? 'selected="selected"' : '') . '>' . $this->getLang('level2') . '</option>';
-        echo '<option value="3" ' . (($this->profiles[$no]['depth'] == 3) ? 'selected="selected"' : '') . '>' . $this->getLang('level3') . '</option>';
-        echo '</select>';
-
-        echo '<label for="sync__user">' . $this->getLang('user') . '</label> ';
-        echo '<input type="text" name="prf[user]" id="sync__user" class="edit" value="' . hsc($this->profiles[$no]['user']) . '" />';
-
-        echo '<label for="sync__pass">' . $this->getLang('pass') . '</label> ';
-        echo '<input type="password" name="prf[pass]" id="sync__pass" class="edit" value="' . hsc($this->profiles[$no]['pass']) . '" />';
-
-        echo '<label for="sync__timeout">' . $this->getLang('timeout') . '</label>';
-        echo '<input type="number" name="prf[timeout]" id="sync__timeout" class="edit" value="' . hsc($this->profiles[$no]['timeout']) . '" />';
-
-        echo '<span>' . $this->getLang('type') . '</span>';
-
-        echo '<div class="type">';
-        echo '<input type="radio" name="prf[type]" id="sync__type0" value="0" ' . (($this->profiles[$no]['type'] == 0) ? 'checked="checked"' : '') . '/>';
-        echo '<label for="sync__type0">' . $this->getLang('type0') . '</label> ';
-
-        echo '<input type="radio" name="prf[type]" id="sync__type1" value="1" ' . (($this->profiles[$no]['type'] == 1) ? 'checked="checked"' : '') . '/>';
-        echo '<label for="sync__type1">' . $this->getLang('type1') . '</label> ';
-
-        echo '<input type="radio" name="prf[type]" id="sync__type2" value="2" ' . (($this->profiles[$no]['type'] == 2) ? 'checked="checked"' : '') . '/>';
-        echo '<label for="sync__type2">' . $this->getLang('type2') . '</label> ';
-        echo '</div>';
-
-        echo '<div class="submit">';
-        echo '<input type="submit" value="' . $this->getLang('save') . '" class="button" />';
-        if($no !== '' && $this->profiles[$no]['ltime']) {
-            echo '<small>' . $this->getLang('changewarn') . '</small>';
-        }
-        echo '</div>';
-
-        echo '<div class="submit">';
-        echo '<input name="sync__delete" type="submit" value="' . $this->getLang('delete') . '" class="button" />';
-        echo '</div>';
-
         echo '</fieldset>';
         echo '</form>';
     }

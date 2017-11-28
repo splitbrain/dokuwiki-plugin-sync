@@ -39,6 +39,22 @@ class ProfileManager {
     }
 
     /**
+     * Return an empty profile config
+     *
+     * @return array
+     */
+    public function getEmptyConfig() {
+        return [
+            'server' => '',
+            'ns' => '',
+            'depth' => 0,
+            'user' => '',
+            'pass' => '',
+            'timeout' => 15,
+        ];
+    }
+
+    /**
      * Set the given config for the given profile
      *
      * When $num is null, the data is added to a new profile
@@ -53,6 +69,36 @@ class ProfileManager {
             $this->profiles[$num] = $data;
         }
 
+        $this->save();
+    }
+
+    /**
+     * List all profiles with a nice label
+     *
+     * @return array
+     */
+    public function getProfileLabels() {
+        $labels = [];
+        foreach($this->profiles as $idx => $profile) {
+            $label = parse_url($profile['server'], PHP_URL_HOST);
+            if($profile['user'] !== '') $label = $profile['user'] . '@' . $label;
+            if($profile['ns'] !== '') $label .= ':' . $profile['ns'];
+            $labels[$idx] = $label;
+        }
+
+        return $labels;
+    }
+
+    /**
+     * Delete a profile
+     *
+     * @param int $num
+     * @throws SyncException
+     */
+    public function deleteProfileConfig($num) {
+        if(!isset($this->profiles[$num])) throw new SyncException('No such profile');
+        unset($this->profiles[$num]);
+        $this->profiles = array_values($this->profiles); //reindex
         $this->save();
     }
 
