@@ -42,9 +42,17 @@ class Profile {
     /**
      * Access the config that initialized this profile
      *
-     * @return array
+     * @param string|null $key when a key is given only that key's config value is returned
+     * @return mixed
      */
-    public function getConfig() {
+    public function getConfig($key=null) {
+        if($key !== null) {
+            if(isset($this->config[$key])) {
+                return $this->config[$key];
+            } else {
+                return null;
+            }
+        }
         return $this->config;
     }
 

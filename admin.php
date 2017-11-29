@@ -1,6 +1,7 @@
 <?php
 use dokuwiki\Form\Form;
 use dokuwiki\plugin\sync\ProfileManager;
+use dokuwiki\plugin\sync\SyncException;
 
 // must be run within Dokuwiki
 if(!defined('DOKU_INC')) die();
@@ -26,7 +27,11 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         global $INPUT;
 
         $this->profileManager = new ProfileManager();
-        $this->profno = $INPUT->int('no', false);
+        if($INPUT->str('no') == 'none') {
+            $this->profno = -1;
+        } else {
+            $this->profno = $INPUT->int('no', -1);
+        }
     }
 
     /**
@@ -104,7 +109,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                 $this->profno = $this->profileManager->setProfileConfig($this->profno, $profile);
                 msg('profile saved', 1);
             }
-        } catch(\dokuwiki\plugin\sync\SyncException $e) {
+        } catch(SyncException $e) {
             msg(hsc($e->getMessage()), -1);
         }
     }
@@ -149,7 +154,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             ob_flush();
 
             echo '<p>' . $this->getLang('syncdone') . '</p>';
-        } elseif($_REQUEST['startsync'] && $this->profno !== '') {
+        } elseif($_REQUEST['startsync'] && $this->profno !== -1) {
             // get sync list
             list($lnow, $rnow) = $this->_getTimes();
             $pages = array();
@@ -188,15 +193,47 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
 
             echo '<div class="sync_left">';
             $this->profileDropdown();
-            if($this->profno !== false) {
+            if($this->profno !== -1) {
                 echo '<br />';
-                $this->_profileView();
+                $this->profileInfo();
             }
             echo '</div>';
             echo '<div class="sync_right">';
             $this->profileForm();
             echo '</div>';
         }
+    }
+
+    /**
+     * Check connection for choosen profile and display last sync date.
+     */
+    protected function profileInfo() {
+        try {
+            $profile = $this->profileManager->getProfile($this->profno);
+            $version = $profile->getRemotVersion();
+            $ltime = $profile->getConfig('ltime');
+        } catch(SyncException $e) {
+            echo '<div class="error">' . $this->getLang('noconnect') . '<br />' . hsc($e->getMessage()) . '</div>';
+            return;
+        }
+
+        $form = new Form(
+            [
+                'action' => wl('', ['do' => 'admin', 'page' => 'sync'], false, '&'),
+                'method' => 'POST',
+            ]
+        );
+        $form->setHiddenField('no', $this->profno);
+        $form->addFieldsetOpen($this->getLang('syncstart'));
+        $form->addHTML('<p>' . $this->getLang('remotever') . ' ' . hsc($version) . '</p>');
+        if($ltime) {
+            $form->addHTML('<p>' . $this->getLang('lastsync') . ' ' . dformat($ltime) . '</p>');
+        } else {
+            $form->addHTML('<p>' . $this->getLang('neversync') . '</p>');
+        }
+        $form->addButton('startsync', $this->getLang('syncstart'))->attr('type', 'submit');
+        $form->addFieldsetClose();
+        echo $form->toHTML();
     }
 
     /**
@@ -210,8 +247,8 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             ]
         );
 
-        $profiles = $this->profileManager->getProfileLabels();
-        $profiles[''] = $this->getLang('newprofile');
+        $profiles = ['none' => $this->getLang('newprofile')];
+        $profiles = array_merge($profiles, $this->profileManager->getProfileLabels());
 
         $form->addFieldsetOpen($this->getLang('profile'));
         $form->addDropdown('no', $profiles)->val($this->profno);
@@ -233,7 +270,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             ]
         );
 
-        if($this->profno === false) {
+        if($this->profno === -1) {
             $legend = $this->getLang('create');
             $profile = $this->profileManager->getEmptyConfig();
         } else {
@@ -242,15 +279,15 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         }
 
         $depths = [
-            ['label' => $this->getLang('level0'), 'attr' => ['value' => '0']],
-            ['label' => $this->getLang('level1'), 'attr' => ['value' => '1']],
-            ['label' => $this->getLang('level2'), 'attr' => ['value' => '2']],
-            ['label' => $this->getLang('level3'), 'attr' => ['value' => '3']],
+            ['label' => $this->getLang('level0')],
+            ['label' => $this->getLang('level1')],
+            ['label' => $this->getLang('level2')],
+            ['label' => $this->getLang('level3')],
         ];
         $types = [
-            ['label' => $this->getLang('type0'), 'attr' => ['value' => '0']],
-            ['label' => $this->getLang('type1'), 'attr' => ['value' => '1']],
-            ['label' => $this->getLang('type2'), 'attr' => ['value' => '2']],
+            ['label' => $this->getLang('type0')],
+            ['label' => $this->getLang('type1')],
+            ['label' => $this->getLang('type2')],
         ];
 
         $form->addFieldsetOpen($legend);
@@ -265,13 +302,13 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         $form->addDropdown('prf[type]', $types, $this->getLang('type'))->val($profile['type']);
         $form->addButton('', $this->getLang('save'))->attr('type', 'submit');
 
-        if($this->profno !== false && !empty($profile['ltime'])) {
+        if($this->profno !== -1 && !empty($profile['ltime'])) {
             echo '<small>' . $this->getLang('changewarn') . '</small>';
         }
 
         $form->addFieldsetClose();
 
-        if($this->profno !== false) {
+        if($this->profno !== -1) {
             $form->addFieldsetOpen($this->getLang('delete'));
             $form->addButton('sync__delete', $this->getLang('delete'));
             $form->addFieldsetClose();
@@ -298,37 +335,6 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         global $conf;
         $profiles = $conf['metadir'] . '/sync.profiles';
         io_saveFile($profiles, serialize($this->profiles));
-    }
-
-    /**
-     * Check connection for choosen profile and display last sync date.
-     */
-    function _profileView() {
-        if(!$this->_connect()) return;
-
-        global $conf;
-        $no = $this->profno;
-
-        $ok = $this->client->query('dokuwiki.getVersion');
-        $version = '';
-        if($ok) $version = $this->client->getResponse();
-
-        echo '<form action="" method="post">';
-        echo '<input type="hidden" name="no" value="' . hsc($no) . '" />';
-        echo '<fieldset><legend>' . $this->getLang('syncstart') . '</legend>';
-        if($version) {
-            echo '<p>' . $this->getLang('remotever') . ' ' . hsc($version) . '</p>';
-            if($this->profiles[$no]['ltime']) {
-                echo '<p>' . $this->getLang('lastsync') . ' ' . strftime($conf['dformat'], $this->profiles[$no]['ltime']) . '</p>';
-            } else {
-                echo '<p>' . $this->getLang('neversync') . '</p>';
-            }
-            echo '<input name="startsync" type="submit" value="' . $this->getLang('syncstart') . '" class="button" />';
-        } else {
-            echo '<p class="error">' . $this->getLang('noconnect') . '<br />' . hsc($this->client->getErrorMessage()) . '</p>';
-        }
-        echo '</fieldset>';
-        echo '</form>';
     }
 
     /**

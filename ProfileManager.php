@@ -91,10 +91,10 @@ class ProfileManager {
         foreach($this->profiles as $idx => $profile) {
             $label = parse_url($profile['server'], PHP_URL_HOST);
             if($label === null) $label = $profile['server'];
-            $label = ($idx + 1) . '. ' . $label;
             if($profile['user'] !== '') $label = $profile['user'] . '@' . $label;
             if($profile['ns'] !== '') $label .= ':' . $profile['ns'];
-            $labels[$idx] = $label;
+            $label = ($idx + 1) . '. ' . $label;
+            $labels["$idx."] = $label;
         }
 
         return $labels;
