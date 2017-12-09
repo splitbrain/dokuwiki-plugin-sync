@@ -31,6 +31,14 @@ jQuery(function () {
         });
         $output.append($table);
 
+        var $lbl = jQuery('<label>');
+        $lbl.text(LANG.plugins.sync.summary +': ');
+        var $sum = jQuery('<input>');
+        $sum.attr('type', 'text');
+        $sum.addClass('edit');
+        $lbl.append($sum);
+        $output.append($lbl);
+
         var $button = jQuery('<button>');
         $button.click(beginsync);
         $button.text(LANG.plugins.sync.btn_start);
