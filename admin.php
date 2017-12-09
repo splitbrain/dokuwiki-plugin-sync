@@ -118,76 +118,22 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
      * output appropriate html
      */
     function html() {
-        if(($_POST['sync_pages'] || $_POST['sync_media']) && $this->profno !== '') {
-            // do the sync
-            echo $this->locale_xhtml('sync');
+        global $INPUT;
+        if($INPUT->bool('startsync') && $this->profno != -1 && checkSecurityToken()) {
+            // fixme display an intro
 
-            //show progressbar
-            echo '<div class="centeralign" id="dw__loading">' . NL;
-            echo '<script type="text/javascript" charset="utf-8"><!--//--><![CDATA[//><!--' . NL;
-            echo 'showLoadBar();' . NL;
-            echo '//--><!]]></script>' . NL;
-            echo '<br /></div>' . NL;
-            flush();
-            ob_flush();
+            $data = [
+                'profile' => $this->profno
+            ];
+            echo '<script type="application/javascript">';
+            echo 'SYNC_DATA = ' . json_encode($data) . ';';
+            echo '</script>';
 
-            echo '<ul class="sync">';
+            echo '<script src="' . DOKU_BASE . 'lib/plugins/sync/sync.js" type="text/javascript"></script>';
 
-            if($_POST['sync_pages']) {
-                $this->_sync($_POST['sync_pages'], 'pages');
-            }
-            if($_POST['sync_media']) {
-                $this->_sync($_POST['sync_media'], 'media');
-            }
-            $this->_saveSyncTimes(
-                (int) $_POST['lnow'],
-                (int) $_POST['rnow']
-            );
+            echo '<div id="sync__progress"></div>';
+            echo '<div id="sync__plugin"></div>';
 
-            echo '</ul>';
-
-            //hide progressbar
-            echo '<script type="text/javascript" charset="utf-8"><!--//--><![CDATA[//><!--' . NL;
-            echo 'hideLoadBar("dw__loading");' . NL;
-            echo '//--><!]]></script>' . NL;
-            flush();
-            ob_flush();
-
-            echo '<p>' . $this->getLang('syncdone') . '</p>';
-        } elseif($_REQUEST['startsync'] && $this->profno !== -1) {
-            // get sync list
-            list($lnow, $rnow) = $this->_getTimes();
-            $pages = array();
-            $media = array();
-            if($rnow) {
-                if($this->profiles[$this->profno]['type'] == 0 ||
-                    $this->profiles[$this->profno]['type'] == 1
-                ) {
-                    $pages = $this->_getSyncList('pages');
-                }
-                if(($this->profiles[$this->profno]['type'] == 0 ||
-                        $this->profiles[$this->profno]['type'] == 2)
-                    && $pages !== false
-                ) {
-                    $media = $this->_getSyncList('media');
-                }
-            }
-
-            if($pages === false || $media === false) {
-                return;
-            }
-
-            if(count($pages) || count($media)) {
-                $this->_directionFormStart($lnow, $rnow);
-                if(count($pages))
-                    $this->_directionForm('pages', $pages);
-                if(count($media))
-                    $this->_directionForm('media', $media);
-
-                $this->_directionFormEnd();
-            } else {
-                echo $this->locale_xhtml('nochange');
-            }
         } else {
             echo $this->locale_xhtml('intro');
 
@@ -219,11 +165,13 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
 
         $form = new Form(
             [
-                'action' => wl('', ['do' => 'admin', 'page' => 'sync'], false, '&'),
-                'method' => 'POST',
+                'action' => wl('', false, '&'),
+                'method' => 'GET',
             ]
         );
         $form->setHiddenField('no', $this->profno);
+        $form->setHiddenField('do', 'admin');
+        $form->setHiddenField('page', 'sync');
         $form->addFieldsetOpen($this->getLang('syncstart'));
         $form->addHTML('<p>' . $this->getLang('remotever') . ' ' . hsc($version) . '</p>');
         if($ltime) {

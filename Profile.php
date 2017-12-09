@@ -10,6 +10,10 @@ class Profile {
     const DIR_PUSH_DEL = 2;
     const DIR_NONE = 0;
 
+    const TYPE_BOTH = 0;
+    const TYPE_PAGES = 1;
+    const TYPE_MEDIA = 2;
+
     /** @var array hold the profile configuration */
     protected $config;
     /** @var Client the API client */
@@ -17,7 +21,7 @@ class Profile {
     /** @var  array the options we use to query the files to sync */
     protected $syncoptions;
     /** @var  array the list of files to sync */
-    protected $synclist;
+    protected $synclist = [];
 
     /**
      * Profile constructor.
@@ -45,7 +49,7 @@ class Profile {
      * @param string|null $key when a key is given only that key's config value is returned
      * @return mixed
      */
-    public function getConfig($key=null) {
+    public function getConfig($key = null) {
         if($key !== null) {
             if(isset($this->config[$key])) {
                 return $this->config[$key];
@@ -83,23 +87,27 @@ class Profile {
     /**
      * Get a list of changed files
      *
-     * @param string $type pages|media
      * @return array
      */
-    public function getSyncList($type) {
-        $this->fetchRemoteFileList($type);
-        $this->fetchLocalFileList($type);
-        $this->consolidateSyncList($type);
+    public function getSyncList() {
+        if($this->config['type'] == self::TYPE_PAGES || $this->config['type'] == self::TYPE_BOTH) {
+            $this->fetchRemoteFileList(self::TYPE_PAGES);
+            $this->fetchLocalFileList(self::TYPE_PAGES);
+        }
+        if($this->config['type'] == self::TYPE_MEDIA || $this->config['type'] == self::TYPE_BOTH) {
+            $this->fetchRemoteFileList(self::TYPE_MEDIA);
+            $this->fetchLocalFileList(self::TYPE_MEDIA);
+        }
 
+        $this->consolidateSyncList();
         ksort($this->synclist); #FIXME implement our own sort with dir=0 at the top
-
         return $this->synclist;
     }
 
     /**
      * Synchronise the given file
      *
-     * @param string $type pages|media
+     * @param int $type pages|media
      * @param string $id the ID of the page or media
      * @param int $dir the sync direction
      * @param string $summary the editing summary
@@ -126,13 +134,13 @@ class Profile {
     /**
      * Sync from remote to local
      *
-     * @param string $type pages|media
+     * @param int $type pages|media
      * @param string $id the ID of the page or media
      * @param string $summary the editing summary
      * @throws SyncException
      */
     protected function syncPull($type, $id, $summary) {
-        if($type == 'pages') {
+        if($type === self::TYPE_PAGES) {
             if(checklock($id)) throw new SyncException('Local file is locked');
             $this->client->query('wiki.getPage', $id);
         } else {
@@ -140,7 +148,7 @@ class Profile {
         }
 
         $data = $this->client->getResponse();
-        if($type == 'pages') {
+        if($type === self::TYPE_PAGES) {
             saveWikiText($id, $data, $summary, false);
             idx_addPage($id);
         } else {
@@ -151,13 +159,13 @@ class Profile {
     /**
      * Delete a local file
      *
-     * @param string $type pages|media
+     * @param int $type pages|media
      * @param string $id the ID of the page or media
      * @param string $summary the editing summary
      * @throws SyncException
      */
     protected function syncPullDelete($type, $id, $summary) {
-        if($type == 'pages') {
+        if($type === self::TYPE_PAGES) {
             if(checklock($id)) throw new SyncException('Local file is locked');
             saveWikiText($id, '', $summary, false);
         } else {
@@ -168,13 +176,13 @@ class Profile {
     /**
      * Sync from local to remote
      *
-     * @param string $type pages|media
+     * @param int $type pages|media
      * @param string $id the ID of the page or media
      * @param string $summary the editing summary
      * @throws SyncException
      */
     protected function syncPush($type, $id, $summary) {
-        if($type == 'pages') {
+        if($type === self::TYPE_PAGES) {
             $this->setRemoteLock($id, true);
             $data = rawWiki($id);
             $this->client->query('wiki.putPage', $id, $data, array('sum' => $summary));
@@ -189,13 +197,13 @@ class Profile {
     /**
      * Delete a remote file
      *
-     * @param string $type pages|media
+     * @param int $type pages|media
      * @param string $id the ID of the page or media
      * @param string $summary the editing summary
      * @throws SyncException
      */
     protected function syncPushDelete($type, $id, $summary) {
-        if($type == 'pages') {
+        if($type === self::TYPE_PAGES) {
             $this->setRemoteLock($id, true);
             $this->client->query('wiki.putPage', $id, '', array('sum' => $summary));
             $this->setRemoteLock($id, false);
@@ -230,10 +238,10 @@ class Profile {
     /**
      * put all remote files for this profile into the sync list
      *
-     * @param string $type pages|media
+     * @param int $type pages|media
      */
     protected function fetchRemoteFileList($type) {
-        if($type == 'pages') {
+        if($type === self::TYPE_PAGES) {
             $cmd = 'dokuwiki.getPagelist';
         } else {
             $cmd = 'wiki.getAttachments';
@@ -244,19 +252,19 @@ class Profile {
 
         // put into synclist
         foreach($remote as $item) {
-            $this->synclist[$type][$item['id']]['remote'] = $item;
+            $this->synclist[$type][$item['id']]['remote'] = $this->itemEnhance($item);
         }
     }
 
     /**
      * put all local files for this profile into the sync list
      *
-     * @param string $type pages|media
+     * @param int $type pages|media
      */
     protected function fetchLocalFileList($type) {
         global $conf;
 
-        if($type == 'pages') {
+        if($type === self::TYPE_PAGES) {
             $basedir = $conf['datadir'];
             $cmd = 'search_allpages';
         } else {
@@ -270,52 +278,63 @@ class Profile {
 
         // put into synclist
         foreach($local as $item) {
-            $this->synclist[$type][$item['id']]['local'] = $item;
+            $this->synclist[$type][$item['id']]['local'] = $this->itemEnhance($item);
         }
     }
 
     /**
-     * removes all files that do not need syncing and calulates direction for the rest
+     * Enance item with formatted info
      *
-     * @param $type
+     * @param array $item
+     * @return mixed
      */
-    protected function consolidateSyncList($type) {
+    protected function itemEnhance($item) {
+        $item['info'] = dformat($item['mtime']) . '<br />' . filesize_h($item['size']);
+        return $item;
+    }
+
+    /**
+     * removes all files that do not need syncing and calulates direction for the rest
+     */
+    protected function consolidateSyncList() {
         // synctimes
         $ltime = (int) $this->config['ltime'];
         $rtime = (int) $this->config['rtime'];
         $letime = (int) $this->config['letime'];
         $retime = (int) $this->config['retime'];
 
-        foreach($this->synclist[$type] as $id => $item) {
+        foreach([self::TYPE_PAGES, self::TYPE_MEDIA] as $type) {
+            foreach($this->synclist[$type] as $id => $item) {
 
-            // no sync if hashes match
-            if($item['remote']['hash'] == $item['local']['hash']) {
-                unset($this->synclist[$type][$item['id']]);
-                continue;
-            }
+                // no sync if hashes match
+                if($item['remote']['hash'] == $item['local']['hash']) {
+                    unset($this->synclist[$type][$item['id']]);
+                    continue;
+                }
 
-            // check direction
-            $dir = self::DIR_NONE;
-            if($ltime && $rtime) { // synced before
-                if($item['remote']['mtime'] > $rtime &&
-                    $item['local']['mtime'] <= $letime
-                ) {
-                    $dir = self::DIR_PULL;
+                // check direction
+                $dir = self::DIR_NONE;
+                if($ltime && $rtime) { // synced before
+                    if($item['remote']['mtime'] > $rtime &&
+                        $item['local']['mtime'] <= $letime
+                    ) {
+                        $dir = self::DIR_PULL;
+                    }
+                    if($item['remote']['mtime'] <= $retime &&
+                        $item['local']['mtime'] > $ltime
+                    ) {
+                        $dir = self::DIR_PUSH;
+                    }
+                } else { // never synced
+                    if(!$item['local']['mtime'] && $item['remote']['mtime']) {
+                        $dir = self::DIR_PULL;
+                    }
+                    if($item['local']['mtime'] && !$item['remote']['mtime']) {
+                        $dir = self::DIR_PUSH;
+                    }
                 }
-                if($item['remote']['mtime'] <= $retime &&
-                    $item['local']['mtime'] > $ltime
-                ) {
-                    $dir = self::DIR_PUSH;
-                }
-            } else { // never synced
-                if(!$item['local']['mtime'] && $item['remote']['mtime']) {
-                    $dir = self::DIR_PULL;
-                }
-                if($item['local']['mtime'] && !$item['remote']['mtime']) {
-                    $dir = self::DIR_PUSH;
-                }
+                $this->synclist[$type][$item['id']]['dir'] = $dir;
             }
-            $this->synclist[$type][$item['id']]['dir'] = $dir;
         }
     }
 
