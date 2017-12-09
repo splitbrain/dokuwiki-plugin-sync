@@ -100,7 +100,6 @@ class Profile {
         }
 
         $this->consolidateSyncList();
-        ksort($this->synclist); #FIXME implement our own sort with dir=0 at the top
         return $this->synclist;
     }
 
@@ -305,10 +304,9 @@ class Profile {
 
         foreach([self::TYPE_PAGES, self::TYPE_MEDIA] as $type) {
             foreach($this->synclist[$type] as $id => $item) {
-
                 // no sync if hashes match
                 if($item['remote']['hash'] == $item['local']['hash']) {
-                    unset($this->synclist[$type][$item['id']]);
+                    unset($this->synclist[$type][$id]);
                     continue;
                 }
 
@@ -333,7 +331,7 @@ class Profile {
                         $dir = self::DIR_PUSH;
                     }
                 }
-                $this->synclist[$type][$item['id']]['dir'] = $dir;
+                $this->synclist[$type][$id]['dir'] = $dir;
             }
         }
     }

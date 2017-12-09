@@ -66,6 +66,11 @@ class action_plugin_sync extends DokuWiki_Action_Plugin {
         $profile = $prmanager->getProfile($profno);
         $list = $profile->getSyncList();
         $times = $profile->getTimes();
+        $count = 0;
+
+        foreach($list as $items) {
+            $count += count($items);
+        }
 
         $data = [
             'times' => [
@@ -73,8 +78,33 @@ class action_plugin_sync extends DokuWiki_Action_Plugin {
                 'rtime' => $times[1],
             ],
             'list' => $list,
+            'count' => $count
         ];
 
         return $data;
+    }
+
+    /**
+     * Store the times of the last sync
+     *
+     * @return bool
+     */
+    protected function sync_finish() {
+        global $INPUT;
+        $prmanager = new ProfileManager();
+        $profno = $INPUT->int('no');
+
+        $profile = $prmanager->getProfile($profno);
+        $times = $profile->getTimes();
+
+        $config = $profile->getConfig();
+
+        $config['ltime'] = $INPUT->int('ltime');
+        $config['rtime'] = $INPUT->int('rtime');
+        $config['letime'] = $times[0];
+        $config['retime'] = $times[1];
+
+        $prmanager->setProfileConfig($profno, $config);
+        return true;
     }
 }

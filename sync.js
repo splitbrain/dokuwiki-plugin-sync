@@ -4,17 +4,21 @@ jQuery(function () {
     var row = 0;
     var $output = jQuery('#sync__plugin');
     var $progress = jQuery('#sync__progress').progressbar({value: false});
+    var $progress_label = $progress.find('.label');
 
 
     function displayTable(data) {
-        console.log('yeah');
-
         console.log(data);
 
+        SYNC_DATA.times = data.times;
+
+        if(data.count === 0) {
+            $output.append('<p>No data to sync</p>');
+            $output.append(finishbutton());
+            return;
+        }
 
         var $table = jQuery('<table>');
-
-
         jQuery.each(data.list, function (type, items) {
             jQuery.each(items, function (id, item) {
                 $table.append(tr(type, id, item));
@@ -32,29 +36,29 @@ jQuery(function () {
     function tr(type, id, item) {
         var $tr = jQuery('<tr>');
         $tr.html(
-            '<td class="sync__file"></td>' +
-            '<td class="sync__local"></td>' +
-            '<td class="sync__dir"></td>' +
-            '<td class="sync__remote"></td>' +
-            '<td class="sync__diff"></td>'
+            '<td class="file"></td>' +
+            '<td class="local"></td>' +
+            '<td class="dir"></td>' +
+            '<td class="remote"></td>' +
+            '<td class="diff"></td>'
         );
         $tr.addClass('type' + type);
         $tr.data('type', type);
-        $tr.find('.sync__file').text(id);
+        $tr.find('.file').text(id);
 
         if (item.local) {
-            $tr.find('.sync__local').html(item.local.info);
+            $tr.find('.local').html(item.local.info);
         } else {
-            $tr.find('.sync__local').text('-');
+            $tr.find('.local').text('-');
         }
 
         if (item.remote) {
-            $tr.find('.sync__remote').html(item.remote.info);
+            $tr.find('.remote').html(item.remote.info);
         } else {
-            $tr.find('.sync__remote').text('-');
+            $tr.find('.remote').text('-');
         }
 
-        $tr.find('.sync__dir').append(dir(item));
+        $tr.find('.dir').append(dir(item));
 
         return $tr;
     }
@@ -62,20 +66,40 @@ jQuery(function () {
     function dir(item) {
         row++;
 
-        $radios = jQuery('<input /><input /><input />');
-        $radios.attr('type', 'radio');
-        $radios.attr('name', 'dir' + row);
-        $radios.attr('value', 0);
+        var $html = jQuery(
+            '<label class="push"><input /></label>' +
+            '<label class="skip"><input /></label>' +
+            '<label class="pull"><input /></label>'
+        );
+        var $radios = $html.find('input');
+        $radios.attr({
+            type: 'radio',
+            name: 'dir' + row,
+            value: 0,
+            title: LANG.plugins.sync.keep
+        });
 
         if (item.local) {
-            $radios.first().attr('value', 1);
+            $radios.first().attr({
+                value: 1,
+                title: LANG.plugins.sync.push
+            });
         } else {
-            $radios.first().attr('value', 2);
+            $radios.first().attr({
+                value: 2,
+                title: LANG.plugins.sync.pushdel
+            });
         }
         if (item.remote) {
-            $radios.last().attr('value', -1);
+            $radios.last().attr({
+                value: -1,
+                title: LANG.plugins.sync.pull
+            });
         } else {
-            $radios.last().attr('value', -2);
+            $radios.last().attr({
+                value: -2,
+                title: LANG.plugins.sync.pulldel
+            });
         }
 
         if (item.dir === -1 || item.dir === 1) {
@@ -84,7 +108,7 @@ jQuery(function () {
             $radios.val([0]);
         }
 
-        return $radios;
+        return $html;
     }
 
     function beginsync() {
@@ -93,7 +117,7 @@ jQuery(function () {
         $output.find('tr').each(function (idx, tr) {
             var $tr = jQuery(tr);
             var id = $tr.find('td').first().text();
-            var dir = parseInt($tr.find('input').val(), 10);
+            var dir = parseInt($tr.find('input:checked').val(), 10);
             var type = parseInt($tr.data('type'), 10);
 
             if (dir !== 0) {
@@ -106,24 +130,43 @@ jQuery(function () {
         $progress.progressbar('option', 'max', SYNC_DATA.items.length);
         $progress.show();
 
-        $output.append('<div class="info">Syncing ' + SYNC_DATA.items.length + ' files'); // FIXME localize
+        $output.append('<p>Syncing ' + SYNC_DATA.items.length + ' files</p>'); // FIXME localize
 
         sync();
     }
 
-
-    function endsync() {
+    function finishbutton() {
         $progress.hide();
         var link = document.createElement('a');
         link.href = DOKU_BASE + '?do=admin&page=sync';
         link.text = 'Okay'; // FIXME localize
         link.className = 'button';
-        $output.append(link);
+        return link;
+    }
+
+    function endsync() {
+        jQuery.ajax(
+            DOKU_BASE + 'lib/exe/ajax.php',
+            {
+                method: 'POST',
+                data: {
+                    call: 'sync_finish',
+                    no: SYNC_DATA.profile,
+                    ltime: SYNC_DATA.times.ltime,
+                    rtime: SYNC_DATA.times.rtime
+                },
+                complete: function () {
+                    $output.append(finishbutton());
+                },
+                error: error
+            }
+        );
     }
 
     function sync() {
         var cur = $progress.progressbar('option', 'max') - SYNC_DATA.items.length;
         $progress.progressbar('option', 'value', cur);
+        $progress_label.text = '';
 
         var item = SYNC_DATA.items.pop();
         if (!item) {
@@ -131,7 +174,7 @@ jQuery(function () {
             return;
         }
 
-
+        $progress_label.text = item[0];
         jQuery.ajax(
             DOKU_BASE + 'lib/exe/ajax.php',
             {
@@ -146,21 +189,17 @@ jQuery(function () {
                 complete: sync,
                 error: error
             }
-        )
+        );
     }
 
 
     function error(data) {
-        console.log(data);
-
-
-        $err = jQuery('<div class="error">');
+        var $err = jQuery('<div class="error">');
         $err.text(data);
-
         $output.append($err);
     }
 
-
+    // main
     jQuery.ajax(
         DOKU_BASE + 'lib/exe/ajax.php',
         {

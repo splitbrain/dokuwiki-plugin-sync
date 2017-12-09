@@ -131,12 +131,13 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
 
             echo '<script src="' . DOKU_BASE . 'lib/plugins/sync/sync.js" type="text/javascript"></script>';
 
-            echo '<div id="sync__progress"></div>';
+            echo '<div id="sync__progress"><div class="label"></div></div>';
             echo '<div id="sync__plugin"></div>';
 
         } else {
             echo $this->locale_xhtml('intro');
 
+            echo '<div id="sync__plugin__form">';
             echo '<div class="sync_left">';
             $this->profileDropdown();
             if($this->profno !== -1) {
@@ -146,6 +147,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             echo '</div>';
             echo '<div class="sync_right">';
             $this->profileForm();
+            echo '</div>';
             echo '</div>';
         }
     }

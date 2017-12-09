@@ -1,0 +1,96 @@
+#sync__plugin__form {
+    display: flex;
+    flex-wrap: wrap;
+
+    > div {
+        flex-grow: 1;
+        flex-basis: auto;
+        width: 400px;
+
+        fieldset {
+            width: 90%;
+
+            samp,
+            label {
+                margin-bottom: 0.4em;
+                display: flex;
+                > * {
+                    flex-grow: 0;
+                    width: 50%;
+                }
+            }
+        }
+    }
+}
+
+#sync__plugin {
+    table {
+        table-layout: fixed;
+        width: 100%;
+
+        td {
+            vertical-align: middle;
+        }
+
+        td.dir {
+            width: 6em;
+        }
+
+        td.local,
+        td.remote {
+            white-space: nowrap;
+        }
+    }
+
+    // general setup for custom radio buttons
+    label input {
+        visibility: hidden;
+        width: 2em;
+        height: 2em;
+
+        &::before {
+            cursor: pointer;
+            visibility: visible;
+            display: block;
+            width: 2em;
+            height: 2em;
+
+            color: @ini_text;
+            fill: red;
+        }
+    }
+
+    // custom radio icons
+    label.push input {
+        &::before {
+            content: url(pix/arrow-right-bold-circle-outline.svg);
+        }
+        &:checked::before {
+            content: url(pix/arrow-right-bold-circle.svg);
+        }
+    }
+
+    label.skip input {
+        &::before {
+            content: url(pix/pause-circle-outline.svg);
+        }
+        &:checked::before {
+            content: url(pix/pause-circle.svg);
+        }
+    }
+
+    label.pull input {
+        &::before {
+            content: url(pix/arrow-left-bold-circle-outline.svg);
+        }
+        &:checked::before {
+            content: url(pix/arrow-left-bold-circle.svg);
+        }
+    }
+
+}
+
+/*
+// arrow-left-bold-circle-outline
+<svg viewBox="0 0 24 24"><path d="M7,12L12,7V10H16V14H12V17L7,12M22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2A10,10 0 0,1 22,12M20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12Z" /></svg>
+*/

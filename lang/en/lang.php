@@ -53,11 +53,13 @@ $lang['local']  = 'Local Wiki';
 $lang['remote'] = 'Remote Wiki';
 $lang['diff']   = 'Diff';
 
-$lang['push']    = 'Push local revision to remote wiki.';
-$lang['pushdel'] = 'Delete revision at the remote wiki.';
-$lang['pull']    = 'Pull remote revision to local wiki.';
-$lang['pulldel'] = 'Delete local revision.';
-$lang['keep']    = 'Skip this file and keep both revisions as is.';
+$lang['js']['push']    = 'Push local revision to remote wiki.';
+$lang['js']['pushdel'] = 'Delete revision at the remote wiki.';
+$lang['js']['pull']    = 'Pull remote revision to local wiki.';
+$lang['js']['pulldel'] = 'Delete local revision.';
+$lang['js']['keep']    = 'Skip this file and keep both revisions as is.';
 
 $lang['syncdone'] = 'Synchronization finished.';
 $lang['timeout'] = 'Timeout';
+
+
