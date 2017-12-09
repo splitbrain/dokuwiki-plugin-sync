@@ -48,10 +48,11 @@ $lang['remotedelok']   = 'remote delete succeeded:';
 $lang['remotedelfail'] = 'remote delete failed:';
 $lang['skipped']       = 'skipped:';
 
-$lang['file']   = 'Page or Media File';
-$lang['local']  = 'Local Wiki';
-$lang['remote'] = 'Remote Wiki';
-$lang['diff']   = 'Diff';
+$lang['js']['file']   = 'Page or Media File';
+$lang['js']['local']  = 'Local Wiki';
+$lang['js']['remote'] = 'Remote Wiki';
+$lang['js']['diff']   = 'Diff';
+$lang['js']['dir']    = 'Sync Direction';
 
 $lang['js']['push']    = 'Push local revision to remote wiki.';
 $lang['js']['pushdel'] = 'Delete revision at the remote wiki.';
@@ -59,7 +60,14 @@ $lang['js']['pull']    = 'Pull remote revision to local wiki.';
 $lang['js']['pulldel'] = 'Delete local revision.';
 $lang['js']['keep']    = 'Skip this file and keep both revisions as is.';
 
-$lang['syncdone'] = 'Synchronization finished.';
+$lang['js']['insync']    = 'Both wiki namespaces are in sync. Nothing to do.';
+$lang['js']['tosync']    = 'Syncing %d files…';
+$lang['js']['btn_done']  = 'Done';
+$lang['js']['btn_start'] = 'Start';
+$lang['js']['syncdone']  = 'Synchronization finished.';
+$lang['js']['loading']   = 'Retrieving File List…';
+
+
 $lang['timeout'] = 'Timeout';
 
 

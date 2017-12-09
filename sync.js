@@ -6,19 +6,24 @@ jQuery(function () {
     var $progress = jQuery('#sync__progress').progressbar({value: false});
     var $progress_label = $progress.find('.label');
 
-
+    /**
+     * Show the table of items to sync
+     *
+     * @param {object} data
+     */
     function displayTable(data) {
         console.log(data);
 
         SYNC_DATA.times = data.times;
 
-        if(data.count === 0) {
-            $output.append('<p>No data to sync</p>');
-            $output.append(finishbutton());
+        if (data.count === 0) {
+            log(LANG.plugins.sync.insync);
+            finishbutton();
             return;
         }
 
         var $table = jQuery('<table>');
+        $table.append(headers());
         jQuery.each(data.list, function (type, items) {
             jQuery.each(items, function (id, item) {
                 $table.append(tr(type, id, item));
@@ -26,13 +31,33 @@ jQuery(function () {
         });
         $output.append($table);
 
-        var $button = jQuery('<button>sync</button>');
+        var $button = jQuery('<button>');
         $button.click(beginsync);
+        $button.text(LANG.plugins.sync.btn_start);
         $output.append($button);
 
         $progress.hide();
     }
 
+    function headers() {
+        var $tr = jQuery('<tr>');
+
+        ['file', 'local', 'dir', 'remote', 'diff'].map(function (l) {
+            var $th = jQuery('<th>');
+            $th.addClass(l);
+            $th.text(LANG.plugins.sync[l]);
+            $tr.append($th);
+        });
+        return $tr;
+    }
+
+    /**
+     * Get one table row for the given item
+     *
+     * @param {int} type
+     * @param {string} id
+     * @param {object} item
+     */
     function tr(type, id, item) {
         var $tr = jQuery('<tr>');
         $tr.html(
@@ -63,6 +88,11 @@ jQuery(function () {
         return $tr;
     }
 
+    /**
+     * Get the direction buttons for the given Item
+     *
+     * @param {object} item
+     */
     function dir(item) {
         row++;
 
@@ -111,6 +141,9 @@ jQuery(function () {
         return $html;
     }
 
+    /**
+     * Start the sync process
+     */
     function beginsync() {
         SYNC_DATA.items = [];
 
@@ -130,20 +163,25 @@ jQuery(function () {
         $progress.progressbar('option', 'max', SYNC_DATA.items.length);
         $progress.show();
 
-        $output.append('<p>Syncing ' + SYNC_DATA.items.length + ' files</p>'); // FIXME localize
-
+        log(LANG.plugins.sync.tosync.replace(/%d/, SYNC_DATA.items.length));
         sync();
     }
 
+    /**
+     * Hide the progressbar and output a button for ending the sync
+     */
     function finishbutton() {
         $progress.hide();
         var link = document.createElement('a');
         link.href = DOKU_BASE + '?do=admin&page=sync';
-        link.text = 'Okay'; // FIXME localize
+        link.text = LANG.plugins.sync.btn_done;
         link.className = 'button';
-        return link;
+        $output.append(link);
     }
 
+    /**
+     * Finalize the sync process
+     */
     function endsync() {
         jQuery.ajax(
             DOKU_BASE + 'lib/exe/ajax.php',
@@ -155,26 +193,28 @@ jQuery(function () {
                     ltime: SYNC_DATA.times.ltime,
                     rtime: SYNC_DATA.times.rtime
                 },
-                complete: function () {
-                    $output.append(finishbutton());
-                },
+                complete: finishbutton(),
                 error: error
             }
         );
     }
 
+    /**
+     * Sync the next file from the sync list
+     */
     function sync() {
         var cur = $progress.progressbar('option', 'max') - SYNC_DATA.items.length;
         $progress.progressbar('option', 'value', cur);
-        $progress_label.text = '';
+        $progress_label.text('');
 
         var item = SYNC_DATA.items.pop();
         if (!item) {
+            log(LANG.plugins.sync.syncdone);
             endsync();
             return;
         }
 
-        $progress_label.text = item[0];
+        $progress_label.text(item[0]);
         jQuery.ajax(
             DOKU_BASE + 'lib/exe/ajax.php',
             {
@@ -192,14 +232,30 @@ jQuery(function () {
         );
     }
 
-
-    function error(data) {
+    /**
+     * Add the given error to the output
+     *
+     * @param {string} error
+     */
+    function error(error) {
         var $err = jQuery('<div class="error">');
-        $err.text(data);
+        $err.text(error);
         $output.append($err);
     }
 
+    /**
+     * Output a given log message
+     *
+     * @param {string} log
+     */
+    function log(log) {
+        var $p = jQuery('<p>');
+        $p.text = log;
+        $output.append($p);
+    }
+
     // main
+    $progress_label.text(LANG.plugins.sync.loading);
     jQuery.ajax(
         DOKU_BASE + 'lib/exe/ajax.php',
         {
@@ -211,6 +267,6 @@ jQuery(function () {
             success: displayTable,
             error: error
         }
-    )
+    );
 
 });

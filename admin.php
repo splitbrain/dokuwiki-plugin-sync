@@ -131,6 +131,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
 
             echo '<script src="' . DOKU_BASE . 'lib/plugins/sync/sync.js" type="text/javascript"></script>';
 
+            echo '<h1>'.$this->getLang('menu').'</h1>';
             echo '<div id="sync__progress"><div class="label"></div></div>';
             echo '<div id="sync__plugin"></div>';
 

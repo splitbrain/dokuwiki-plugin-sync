@@ -23,6 +23,19 @@
     }
 }
 
+#sync__progress {
+    position: relative;
+
+    div.label {
+        position: absolute;
+        padding: 4px;
+        font-weight: bold;
+        text-shadow: 1px 1px 0 #fff;
+        text-align: center;
+        overflow: hidden;
+    }
+}
+
 #sync__plugin {
     table {
         table-layout: fixed;
@@ -39,6 +52,7 @@
         td.local,
         td.remote {
             white-space: nowrap;
+            width: 9em;
         }
     }
 
