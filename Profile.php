@@ -85,6 +85,24 @@ class Profile {
     }
 
     /**
+     * Return the Diff for a given page ID
+     *
+     * @param string $id
+     * @return \Diff
+     */
+    public function diffPage($id) {
+        $this->client->query('wiki.getPage', $id);
+        $remote = $this->client->getResponse();
+        $local = rawWiki($id);
+
+        $df = new \Diff(
+            explode("\n", htmlspecialchars($local)),
+            explode("\n", htmlspecialchars($remote))
+        );
+        return $df;
+    }
+
+    /**
      * Get a list of changed files
      *
      * @return array

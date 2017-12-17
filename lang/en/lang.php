@@ -68,7 +68,6 @@ $lang['js']['syncdone']  = 'Synchronization finished.';
 $lang['js']['loading']   = 'Retrieving File List…';
 $lang['js']['summary']   = 'Summary';
 
-
 $lang['timeout'] = 'Timeout';
 
 

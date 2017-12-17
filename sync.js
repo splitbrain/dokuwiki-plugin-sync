@@ -32,7 +32,7 @@ jQuery(function () {
         $output.append($table);
 
         var $lbl = jQuery('<label>');
-        $lbl.text(LANG.plugins.sync.summary +': ');
+        $lbl.text(LANG.plugins.sync.summary + ': ');
         var $sum = jQuery('<input>');
         $sum.attr('type', 'text');
         $sum.addClass('edit');
@@ -47,6 +47,9 @@ jQuery(function () {
         $progress.hide();
     }
 
+    /**
+     * Get the table headers
+     */
     function headers() {
         var $tr = jQuery('<tr>');
 
@@ -93,7 +96,25 @@ jQuery(function () {
 
         $tr.find('.dir').append(dir(item));
 
+        if (type === '1') {
+            var url = DOKU_BASE + 'lib/plugins/sync/diff.php?no=' + SYNC_DATA.profile + '&id=' + encodeURIComponent(id);
+            var a = jQuery('<a>');
+            a.attr('href', url);
+            a.attr('target', '_blank');
+            a.text(LANG.plugins.sync.diff);
+            a.click(diffclick);
+            $tr.find('.diff').append(a);
+        }
+
         return $tr;
+    }
+
+
+    function diffclick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.open(this.href, 'diff', 'height=600,width=800');
+
     }
 
     /**
