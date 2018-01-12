@@ -5,6 +5,7 @@ jQuery(function () {
     var $output = jQuery('#sync__plugin');
     var $progress = jQuery('#sync__progress').progressbar({value: false});
     var $progress_label = $progress.find('.label');
+    var $sum;
 
     /**
      * Show the table of items to sync
@@ -33,7 +34,7 @@ jQuery(function () {
 
         var $lbl = jQuery('<label>');
         $lbl.text(LANG.plugins.sync.summary + ': ');
-        var $sum = jQuery('<input>');
+        $sum = jQuery('<input>');
         $sum.attr('type', 'text');
         $sum.addClass('edit');
         $lbl.append($sum);
@@ -96,7 +97,7 @@ jQuery(function () {
 
         $tr.find('.dir').append(dir(item));
 
-        if (type === '1') {
+        if (type === 1) {
             var url = DOKU_BASE + 'lib/plugins/sync/diff.php?no=' + SYNC_DATA.profile + '&id=' + encodeURIComponent(id);
             var a = jQuery('<a>');
             a.attr('href', url);
@@ -109,7 +110,11 @@ jQuery(function () {
         return $tr;
     }
 
-
+    /**
+     * Open a diff in a popup
+     *
+     * @param {Event} e
+     */
     function diffclick(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -187,6 +192,8 @@ jQuery(function () {
             }
         });
 
+        SYNC_DATA.summary = $sum.val();
+
         $output.html('');
         $progress.progressbar('option', 'value', 0);
         $progress.progressbar('option', 'max', SYNC_DATA.items.length);
@@ -253,7 +260,8 @@ jQuery(function () {
                     no: SYNC_DATA.profile,
                     id: item[0],
                     type: item[1],
-                    dir: item[2]
+                    dir: item[2],
+                    sum: SYNC_DATA.summary
                 },
                 complete: sync,
                 error: error

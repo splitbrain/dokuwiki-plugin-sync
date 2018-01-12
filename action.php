@@ -47,7 +47,7 @@ class action_plugin_sync extends DokuWiki_Action_Plugin {
             $INPUT->int('type'),
             $INPUT->filter('cleanID')->str('id'),
             $INPUT->int('dir'),
-            'FIXME'
+            $INPUT->str('sum')
         );
 
         return true;
