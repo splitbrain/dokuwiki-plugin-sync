@@ -6,7 +6,7 @@ $lang['syncstart'] = 'Start Synchronization';
 $lang['lastsync']  = 'Last Synchronization:';
 $lang['remotever'] = 'Remote Wiki Version:';
 
-$lang['xmlerr']   = 'Failed to talk to remote wiki. Make sure the remote wiki allows XMLRPC requests and that you set up the endpoint URL correctly.';
+$lang['autherr']  = 'The provided user is not allowed to access the XMLRPC API at the remote wiki.';
 $lang['loginerr'] = 'Failed to login at remote wiki. Make sure supplied credentials are valid at the remote wiki.';
 $lang['versionerr'] = 'The remote wiki XMLRPC API version is too old. You need to upgrade the remote wiki to use the sync plugin.';
 
@@ -38,15 +38,7 @@ $lang['changewarn'] = 'Resaving this profile will reset the sync times. You will
 
 $lang['noconnect']     = 'Could not connect to remote wiki:';
 $lang['lockfail']      = 'couldn\'t lock and will skip:';
-$lang['pullfail']      = 'pull failed:';
-$lang['pullok']        = 'pull succeded:';
-$lang['localdelok']    = 'local delete succeeded:';
 $lang['localdelfail']  = 'local delete failed:';
-$lang['pushfail']      = 'push failed:';
-$lang['pushok']        = 'push succeded:';
-$lang['remotedelok']   = 'remote delete succeeded:';
-$lang['remotedelfail'] = 'remote delete failed:';
-$lang['skipped']       = 'skipped:';
 
 $lang['js']['list']   = 'A list of files that differ between your local and the remote wiki is shown below. You need to decide which revisions you want to keep.'; #from list.txt
 

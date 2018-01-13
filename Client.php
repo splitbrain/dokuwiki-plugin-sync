@@ -6,6 +6,8 @@ class Client extends \IXR_Client {
 
     const MIN_API = 7;
 
+    protected $filecontext = '';
+
     /**
      * Client constructor.
      *
@@ -21,9 +23,18 @@ class Client extends \IXR_Client {
     }
 
     /** @inheritdoc */
-    function query() {
+    public function query() {
         $ok = call_user_func_array('parent::query', func_get_args());
-        if(!$ok) throw new SyncException($this->getErrorMessage(), $this->getErrorCode());
+        $code = $this->getErrorCode();
+        if($code === -32300) $code = -1 * $this->status; // use http status on transport errors
+        if(!$ok) {
+            // when a file context is given include it in the exception
+            if($this->filecontext) {
+                throw new SyncFileException($this->getErrorMessage(), $this->filecontext, $code);
+            } else {
+                throw new SyncException($this->getErrorMessage(), $code);
+            }
+        }
         return $ok;
     }
 
@@ -53,5 +64,14 @@ class Client extends \IXR_Client {
         if($apiversion < self::MIN_API) {
             throw new SyncException('versionerr');
         }
+    }
+
+    /**
+     * Set the file ID this query is running under
+     *
+     * @param string $file
+     */
+    public function setFileContext($file) {
+        $this->filecontext = $file;
     }
 }

@@ -21,6 +21,8 @@ class SyncException extends \Exception {
         $msg = $plugin->getLang($message);
         if($msg) $message = $msg;
 
+        if($code === -403) $message = $plugin->getLang('autherr');
+
         parent::__construct($message, $code, $previous);
     }
 }

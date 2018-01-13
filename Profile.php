@@ -130,6 +130,7 @@ class Profile {
      * @param string $summary the editing summary
      */
     public function syncFile($type, $id, $dir, $summary) {
+        $this->client->setFileContext($id);
         switch($dir) {
             case self::DIR_PULL:
                 $this->syncPull($type, $id, $summary);
@@ -146,6 +147,7 @@ class Profile {
             default:
                 // skip
         }
+        $this->client->setFileContext('');
     }
 
     /**
@@ -154,11 +156,11 @@ class Profile {
      * @param int $type pages|media
      * @param string $id the ID of the page or media
      * @param string $summary the editing summary
-     * @throws SyncException
+     * @throws SyncFileException
      */
     protected function syncPull($type, $id, $summary) {
         if($type === self::TYPE_PAGES) {
-            if(checklock($id)) throw new SyncException('Local file is locked');
+            if(checklock($id)) throw new SyncFileException('lockfail', $id);
             $this->client->query('wiki.getPage', $id);
         } else {
             $this->client->query('wiki.getAttachment', $id);
@@ -179,14 +181,14 @@ class Profile {
      * @param int $type pages|media
      * @param string $id the ID of the page or media
      * @param string $summary the editing summary
-     * @throws SyncException
+     * @throws SyncFileException
      */
     protected function syncPullDelete($type, $id, $summary) {
         if($type === self::TYPE_PAGES) {
-            if(checklock($id)) throw new SyncException('Local file is locked');
+            if(checklock($id)) throw new SyncFileException('lockfail', $id);
             saveWikiText($id, '', $summary, false);
         } else {
-            if(!unlink(mediaFN($id))) throw new SyncException('File deletion failed');
+            if(!unlink(mediaFN($id))) throw new SyncFileException('localdelfail', $id);
         }
     }
 
@@ -196,7 +198,7 @@ class Profile {
      * @param int $type pages|media
      * @param string $id the ID of the page or media
      * @param string $summary the editing summary
-     * @throws SyncException
+     * @throws SyncFileException
      */
     protected function syncPush($type, $id, $summary) {
         if($type === self::TYPE_PAGES) {
@@ -217,7 +219,7 @@ class Profile {
      * @param int $type pages|media
      * @param string $id the ID of the page or media
      * @param string $summary the editing summary
-     * @throws SyncException
+     * @throws SyncFileException
      */
     protected function syncPushDelete($type, $id, $summary) {
         if($type === self::TYPE_PAGES) {
@@ -234,7 +236,7 @@ class Profile {
      *
      * @param string $id
      * @param bool $state is this a lock (true) or unlock (false)
-     * @throws SyncException
+     * @throws SyncFileException
      */
     protected function setRemoteLock($id, $state) {
         if($state) {
@@ -248,7 +250,7 @@ class Profile {
         $this->client->query('dokuwiki.setLocks', array('lock' => $lock, 'unlock' => $unlock));
         $data = $this->client->getResponse();
         if(count((array) $data['lockfail'])) {
-            throw new SyncException('Locking at the remote wiki failed');
+            throw new SyncFileException('lockfail', $id);
         }
     }
 
