@@ -2,14 +2,13 @@
 
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
- * 
+ *
  * @author r0sk <r0sk10@gmail.com>
  */
 $lang['menu']                  = 'Sincronizar Wikis';
 $lang['syncstart']             = 'Comenzar Sincronización';
 $lang['lastsync']              = 'Última Sincronización:';
 $lang['remotever']             = 'Versión de la Wiki Remota:';
-$lang['xmlerr']                = 'Fallo al conectar con wiki remota. Asegúrese que la wiki remota permite solicitudes XMLRPC y que ha configurado correctamente la URL.';
 $lang['loginerr']              = 'Fallo al iniciar sesión en la wiki remota. Asegúrese que las credenciales provistas son válidas en la wiki remota.';
 $lang['versionerr']            = 'La versión XMLRPC API de la wiki remota es demasiado antigua. Necesita actualizar la wiki remota para usar este plugin.';
 $lang['neversync']             = 'Este perfil nunca ha sido sincronizado antes.';
@@ -35,23 +34,18 @@ $lang['type2']                 = 'Archivo Multimedia';
 $lang['save']                  = 'Guardar';
 $lang['changewarn']            = 'Guardar este perfil borrará el registro de sincronización existente. Usted tendrá que elegir manualmente la dirección de sincronización para todos los archivos la próxima vez que sincronice.';
 $lang['lockfail']              = 'no se pudo bloquear y se omitirá:';
-$lang['pullfail']              = 'fallo al obtener:';
-$lang['pullok']                = 'éxito al obtener:';
-$lang['localdelok']            = 'eliminación local exitosa:';
 $lang['localdelfail']          = 'eliminación local fallida:';
-$lang['pushfail']              = 'fallo al enviar:';
-$lang['pushok']                = 'éxito al enviar:';
-$lang['remotedelok']           = 'eliminación remota exitosa:';
-$lang['remotedelfail']         = 'eliminación remota fallida:';
-$lang['skipped']               = 'omitido:';
-$lang['file']                  = 'Página o Archivo Multimedia';
-$lang['local']                 = 'Wiki Local';
-$lang['remote']                = 'Wiki Remote';
-$lang['diff']                  = 'Diferencias';
-$lang['push']                  = 'Enviar revisión local a la wiki remota.';
-$lang['pushdel']               = 'Eliminar revisión en la wiki remota.';
-$lang['pull']                  = 'Obtener revisión remota en la wiki local.';
-$lang['pulldel']               = 'Eliminar revisión local.';
-$lang['keep']                  = 'Omitir este archivo y mantener ambas revisiones tal como están.';
-$lang['syncdone']              = 'Sincronización finalizada.';
+$lang['js']['file']                  = 'Página o Archivo Multimedia';
+$lang['js']['local']                 = 'Wiki Local';
+$lang['js']['remote']                = 'Wiki Remote';
+$lang['js']['diff']                  = 'Diferencias';
+$lang['js']['push']                  = 'Enviar revisión local a la wiki remota.';
+$lang['js']['pushdel']               = 'Eliminar revisión en la wiki remota.';
+$lang['js']['pull']                  = 'Obtener revisión remota en la wiki local.';
+$lang['js']['pulldel']               = 'Eliminar revisión local.';
+$lang['js']['keep']                  = 'Omitir este archivo y mantener ambas revisiones tal como están.';
+$lang['js']['syncdone']              = 'Sincronización finalizada.';
 $lang['timeout']               = 'Timeout';
+
+$lang['js']['list'] = 'Una lista de archivos que difiere entre la wiki local y la remota puede verse más abajo. Usted necesita decidir qué revisión desea conservar.';
+$lang['js']['insync'] = 'No se encontraron diferencias entre su wiki local y la wiki remota. No es necesario sincronizar.';

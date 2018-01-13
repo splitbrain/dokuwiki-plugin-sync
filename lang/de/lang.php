@@ -2,7 +2,7 @@
 
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
- * 
+ *
  * @author Dominik Eckelmann <deckelmann@gmail.com>
  * @author Andreas Gohr <andi@splitbrain.org>
  */
@@ -10,7 +10,6 @@ $lang['menu']                  = 'Wikis abgleichen';
 $lang['syncstart']             = 'Abgleich starten';
 $lang['lastsync']              = 'Letzter Abgleich:';
 $lang['remotever']             = 'Entfernte Wiki Version:';
-$lang['xmlerr']                = 'Fehler bei der Kommunikation mit dem entfernten Wiki. Stellen Sie sicher, dass es XML-RPC Zugriffe erlaubt und der den Endpunkt korrekt angegeben wurde.';
 $lang['loginerr']              = 'Fehler beim Einloggen am entfernten Wiki. Bitte überprüfen Sie die eingegebenen Zugangsdaten.';
 $lang['versionerr']            = 'Die XML-RPC-API Version des entfernten Wikis ist zu alt. Sie müssen das entfernte Wiki aktualisieren, um das Sync Plugin verwenden zu können.';
 $lang['neversync']             = 'Dieses Profil wurde noch nie verwendet.';
@@ -36,23 +35,18 @@ $lang['type2']                 = 'Medien Dateien';
 $lang['save']                  = 'Speichern';
 $lang['changewarn']            = 'Erneutes Speichern setzt die Abgleichzeiten für diese Profil zurück. Sie müssen dann die Abgleichrichtung für alle Dateien manuell festlegen.';
 $lang['lockfail']              = 'Konnte nicht gelockt werden und wird übersprungen:';
-$lang['pullfail']              = 'Runterladen fehlgeschlagen:';
-$lang['pullok']                = 'Runterladen erfolgreich:';
-$lang['localdelok']            = 'Lokales Löschen erfolgreich:';
 $lang['localdelfail']          = 'Lokales Löschen fehlgeschlagen:';
-$lang['pushfail']              = 'Hochladen fehlgeschlagen:';
-$lang['pushok']                = 'Hochladen erfolgreich:';
-$lang['remotedelok']           = 'Entferntes Löschen erfolgreich:';
-$lang['remotedelfail']         = 'Entferntes Löschen fehlgeschlagen:';
-$lang['skipped']               = 'Übersprungen:';
-$lang['file']                  = 'Seite oder Mediendatei';
-$lang['local']                 = 'Lokales Wiki';
-$lang['remote']                = 'Entferntes Wiki';
-$lang['diff']                  = 'Unterschied';
-$lang['push']                  = 'Lade lokale Version in entferntes Wiki hoch.';
-$lang['pushdel']               = 'Lösche die Version im entfernten Wiki.';
-$lang['pull']                  = 'Lade die Version aus dem entfernten Wiki in das lokale Wiki.';
-$lang['pulldel']               = 'Lösche die lokale Version.';
-$lang['keep']                  = 'Überspringe diese Datei und behalte beide Versionen bei.';
-$lang['syncdone']              = 'Abgleich abgeschlossen.';
+$lang['js']['file']                  = 'Seite oder Mediendatei';
+$lang['js']['local']                 = 'Lokales Wiki';
+$lang['js']['remote']                = 'Entferntes Wiki';
+$lang['js']['diff']                  = 'Unterschied';
+$lang['js']['push']                  = 'Lade lokale Version in entferntes Wiki hoch.';
+$lang['js']['pushdel']               = 'Lösche die Version im entfernten Wiki.';
+$lang['js']['pull']                  = 'Lade die Version aus dem entfernten Wiki in das lokale Wiki.';
+$lang['js']['pulldel']               = 'Lösche die lokale Version.';
+$lang['js']['keep']                  = 'Überspringe diese Datei und behalte beide Versionen bei.';
+$lang['js']['syncdone']              = 'Abgleich abgeschlossen.';
 $lang['timeout']               = 'Timeout';
+
+$lang['js']['list'] = 'Die folgenden Dateien unterscheiden sich zwischen dem lokalen und dem entfernten Wiki. Sie müssen entscheiden, welche der jeweils zwei Versionen beibehalten werden sollen.';
+$lang['js']['insync'] = 'Es wurden keine Unterschiede zwischen dem lokalen und dem entfernten Wiki gefunden. Ein Abgleich ist nicht nötig.';

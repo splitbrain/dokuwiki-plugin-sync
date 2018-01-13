@@ -1,5 +1,0 @@
-====== Wikis are in Sync ======
-
-There were no differences found between your local wiki and the remote wiki. No need to synchronize.
-
-

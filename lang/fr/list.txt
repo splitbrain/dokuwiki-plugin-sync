@@ -1,3 +1,0 @@
-====== Files to Synchronize ======
-
-Une liste des fichiers qui diffèrent entre vos fichiers locaux et le wiki distant est indiqué ci-dessous. Vous devez décider ceux que vous garder.
