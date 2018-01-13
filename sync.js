@@ -22,12 +22,13 @@ jQuery(function () {
             finishbutton();
             return;
         }
+        log(LANG.plugins.sync.list);
 
         var $table = jQuery('<table>');
         $table.append(headers());
         jQuery.each(data.list, function (type, items) {
             jQuery.each(items, function (id, item) {
-                $table.append(tr(type, id, item));
+                $table.append(tr(parseInt(type, 10), id, item));
             });
         });
         $output.append($table);
@@ -97,6 +98,7 @@ jQuery(function () {
 
         $tr.find('.dir').append(dir(item));
 
+        console.log('type', type);
         if (type === 1) {
             var url = DOKU_BASE + 'lib/plugins/sync/diff.php?no=' + SYNC_DATA.profile + '&id=' + encodeURIComponent(id);
             var a = jQuery('<a>');
@@ -287,7 +289,7 @@ jQuery(function () {
      */
     function log(log) {
         var $p = jQuery('<p>');
-        $p.text = log;
+        $p.text(log);
         $output.append($p);
     }
 

@@ -48,6 +48,8 @@ $lang['remotedelok']   = 'remote delete succeeded:';
 $lang['remotedelfail'] = 'remote delete failed:';
 $lang['skipped']       = 'skipped:';
 
+$lang['js']['list']   = 'A list of files that differ between your local and the remote wiki is shown below. You need to decide which revisions you want to keep.'; #from list.txt
+
 $lang['js']['file']   = 'Page or Media File';
 $lang['js']['local']  = 'Local Wiki';
 $lang['js']['remote'] = 'Remote Wiki';
@@ -60,7 +62,7 @@ $lang['js']['pull']    = 'Pull remote revision to local wiki.';
 $lang['js']['pulldel'] = 'Delete local revision.';
 $lang['js']['keep']    = 'Skip this file and keep both revisions as is.';
 
-$lang['js']['insync']    = 'Both wiki namespaces are in sync. Nothing to do.';
+$lang['js']['insync']    = 'There were no differences found between your local wiki and the remote wiki. No need to synchronize.'; #from nochange.txt
 $lang['js']['tosync']    = 'Syncing %d files…';
 $lang['js']['btn_done']  = 'Done';
 $lang['js']['btn_start'] = 'Start';
