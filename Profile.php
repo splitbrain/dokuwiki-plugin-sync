@@ -21,7 +21,7 @@ class Profile {
     /** @var  array the options we use to query the files to sync */
     protected $syncoptions;
     /** @var  array the list of files to sync */
-    protected $synclist = [];
+    protected $synclist = [self::TYPE_PAGES => [], self::TYPE_MEDIA => []];
 
     /**
      * Profile constructor.
