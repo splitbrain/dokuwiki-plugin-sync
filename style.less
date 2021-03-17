@@ -50,6 +50,12 @@
             width: 6em;
         }
 
+        td.dir{
+            display: flex;
+            border: none;
+            padding-top: .5em;
+        }
+
         th.local,
         td.local,
         th.remote,
@@ -62,50 +68,100 @@
         td.diff {
             width: 4em;
         }
+    }
+}
 
-        // general setup for custom radio buttons
-        label input {
-            visibility: hidden;
-            width: 2em;
-            height: 2em;
+// custom radio icons
 
-            &::before {
-                cursor: pointer;
-                visibility: visible;
+.sync-dir {
+
+    position: relative;
+    cursor: pointer;
+    margin: 5px;
+    width: 15px;
+    height: 15px;
+
+    &__input {
+        position: absolute;
+        top: 0;
+        right: 0;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 1;
+
+        &-push {
+            &:checked ~ .sync-dir__svg-push {
+                &::after {
+                    display: block;
+                    content: url(pix/arrow-right-bold-circle.svg);
+                }
+            }
+        }
+
+        &-skip {
+            &:checked ~ .sync-dir__svg-skip {
+                &::after {
+                    display: block;
+                    content: url(pix/pause-circle.svg);
+                }
+            }
+        }
+
+        &-pull {
+            &:checked ~ .sync-dir__svg-pull {
+                &::after {
+                    display: block;
+                    content: url(pix/arrow-left-bold-circle.svg);
+                }
+            }
+        }
+    }
+
+    &__svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        cursor: pointer;
+
+        &-push {
+            &::after {
                 display: block;
-                width: 2em;
-                height: 2em;
-
+                content: url(pix/arrow-right-bold-circle-outline.svg);
+                position: absolute;
+                top: 50%;
+                transform: translate(-20%,-105%);
+                height: 70%;
                 color: @ini_text;
                 fill: red;
             }
         }
 
-        // custom radio icons
-        label.push input {
-            &::before {
-                content: url(pix/arrow-right-bold-circle-outline.svg);
-            }
-            &:checked::before {
-                content: url(pix/arrow-right-bold-circle.svg);
-            }
-        }
-
-        label.skip input {
-            &::before {
+        &-skip {
+            &::after {
+                display: block;
                 content: url(pix/pause-circle-outline.svg);
-            }
-            &:checked::before {
-                content: url(pix/pause-circle.svg);
+                position: absolute;
+                top: 50%;
+                transform: translate(-20%,-105%);
+                height: 70%;
+                color: @ini_text;
+                fill: red;
             }
         }
 
-        label.pull input {
-            &::before {
+        &-pull {
+            &::after {
+                display: block;
                 content: url(pix/arrow-left-bold-circle-outline.svg);
-            }
-            &:checked::before {
-                content: url(pix/arrow-left-bold-circle.svg);
+                position: absolute;
+                top: 50%;
+                transform: translate(-20%,-105%);
+                height: 70%;
+                color: @ini_text;
+                fill: red;
+
             }
         }
     }

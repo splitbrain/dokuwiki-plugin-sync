@@ -133,9 +133,9 @@ jQuery(function () {
         row++;
 
         var $html = jQuery(
-            '<label class="push"><input /></label>' +
-            '<label class="skip"><input /></label>' +
-            '<label class="pull"><input /></label>'
+            '<label class="sync-dir push"><input class="sync-dir__input sync-dir__input-push" /><span class="sync-dir__svg sync-dir__svg-push "></span></label>' +
+            '<label class="sync-dir skip"><input class="sync-dir__input sync-dir__input-skip" /><span class="sync-dir__svg sync-dir__svg-skip"></span></label>' +
+            '<label class="sync-dir pull"><input class="sync-dir__input sync-dir__input-pull" /><span class="sync-dir__svg sync-dir__svg-pull"></span></label>'
         );
         var $radios = $html.find('input');
         $radios.attr({
