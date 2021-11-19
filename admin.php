@@ -653,16 +653,45 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                     array('depth' => (int) $this->profiles[$no]['depth'],
                           'hash' => true));
         }else{
-            $ok = $this->client->query('wiki.getAttachments',$ns,
+            if(!empty($ns)){
+                $ok = $this->client->query('wiki.getAttachments',$ns,
+                        array('depth' => (int) $this->profiles[$no]['depth'],
+                              'hash' => true));
+            }else{
+                $ok = $this->client->query('dokuwiki.getPagelist',$ns,
                     array('depth' => (int) $this->profiles[$no]['depth'],
                           'hash' => true));
+                if($ok){
+                    $remotepages = $this->client->getResponse();
+                    foreach ($remotepages as $item) {
+                        if((int) $this->profiles[$no]['depth'] == 0 && strpos($item['id'],':')) continue;
+                        // echo "Trying to sync: " . $item['id'];
+                        $ok = $this->client->query('wiki.getAttachments',$item['id'],
+                          array('depth' => ((int) $this->profiles[$no]['depth'] > 0 ? 1 : 0),
+                              'hash' => true));
+                        if($ok){
+                            if(!isset($remote)) $remote = array();
+                            $remote = array_merge($remote, $this->client->getResponse());
+                        }else{
+                            if(strpos($this->client->getErrorMessage(), '403')) {
+                                // 'remoteuser' has access to the page, but receives a 403 Forbidden
+                                // Probably Media namespace is empty or doesn't exists
+                                $ok = true;
+                            }else{
+                                // echo " [FAIL]";
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
         }
         if(!$ok){
             msg('Failed to fetch remote file list. '.
                 $this->client->getErrorMessage(),-1);
             return false;
         }
-        $remote = $this->client->getResponse();
+        if(!isset($remote)) $remote = $this->client->getResponse();
         // put into synclist
         foreach($remote as $item){
             $list[$item['id']]['remote'] = $item;
