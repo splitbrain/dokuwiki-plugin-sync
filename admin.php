@@ -22,13 +22,20 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
 
     function _connect(){
         if(!is_null($this->client)) return true;
-        $this->client = new IXR_Client($this->profiles[$this->profno]['server']);
+
         if ( isset($this->profiles[$this->profno]['timeout']) ){
           $timeout = (int) $this->profiles[$this->profno]['timeout'];
         } else {
           $timeout = $this->defaultTimeout;
         }
-        $this->client->timeout = $timeout;
+
+        if(class_exists('IXR_Client')) {
+            $this->client = new IXR_Client($this->profiles[$this->profno]['server'], false, 80, $timeout);
+        }
+        else {
+            $this->client = new dokuwiki\Remote\IXR\Client($this->profiles[$this->profno]['server']);
+            $this->client->timeout = $timeout;
+        }
 
         // do the login
         if($this->profiles[$this->profno]['user']){
