@@ -15,7 +15,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     /**
      * Constructor.
      */
-    function admin_plugin_sync(){
+    function __construct(){
         $this->_profileLoad();
         $this->profno = preg_replace('/[^0-9]+/','',$_REQUEST['no']);
     }
