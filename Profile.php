@@ -267,7 +267,7 @@ class Profile {
         }
 
         $this->client->query($cmd, $this->config['ns'], $this->syncoptions);
-        $remote = $this->client->getResponse();
+        $remote = @$this->client->getResponse();
 
         // put into synclist
         foreach($remote as $item) {
@@ -317,37 +317,41 @@ class Profile {
      */
     protected function consolidateSyncList() {
         // synctimes
-        $ltime = (int) $this->config['ltime'];
-        $rtime = (int) $this->config['rtime'];
-        $letime = (int) $this->config['letime'];
-        $retime = (int) $this->config['retime'];
+        $ltime = isset($this->config['ltime']) ? (int) $this->config['ltime'] : null;
+        $rtime = isset($this->config['rtime']) ? (int) $this->config['rtime'] : null;
+        $letime = isset($this->config['letime']) ? (int) $this->config['letime'] : null;
+        $retime = isset($this->config['retime']) ? (int) $this->config['retime'] : null;
 
         foreach([self::TYPE_PAGES, self::TYPE_MEDIA] as $type) {
             foreach($this->synclist[$type] as $id => $item) {
                 // no sync if hashes match
-                if($item['remote']['hash'] == $item['local']['hash']) {
-                    unset($this->synclist[$type][$id]);
-                    continue;
+                if(isset($item['remote']['hash']) && isset($item['local']['hash'])) {
+                    if($item['remote']['hash'] == $item['local']['hash']) {
+                        unset($this->synclist[$type][$id]);
+                        continue;
+                    }
                 }
 
                 // check direction
                 $dir = self::DIR_NONE;
                 if($ltime && $rtime) { // synced before
-                    if($item['remote']['mtime'] > $rtime &&
-                        $item['local']['mtime'] <= $letime
-                    ) {
-                        $dir = self::DIR_PULL;
-                    }
-                    if($item['remote']['mtime'] <= $retime &&
-                        $item['local']['mtime'] > $ltime
-                    ) {
-                        $dir = self::DIR_PUSH;
+                    if(isset($item['local']['mtime']) && isset($item['remote']['mtime'])) {
+                        if($item['remote']['mtime'] > $rtime &&
+                            $item['local']['mtime'] <= $letime
+                        ) {
+                            $dir = self::DIR_PULL;
+                        }
+                        if($item['remote']['mtime'] <= $retime &&
+                            $item['local']['mtime'] > $ltime
+                        ) {
+                            $dir = self::DIR_PUSH;
+                        }
                     }
                 } else { // never synced
-                    if(!$item['local']['mtime'] && $item['remote']['mtime']) {
+                    if(!isset($item['local']['mtime']) && $item['remote']['mtime']) {
                         $dir = self::DIR_PULL;
                     }
-                    if($item['local']['mtime'] && !$item['remote']['mtime']) {
+                    if($item['local']['mtime'] && !isset($item['remote']['mtime'])) {
                         $dir = self::DIR_PUSH;
                     }
                 }

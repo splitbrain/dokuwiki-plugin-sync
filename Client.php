@@ -23,10 +23,11 @@ class Client extends \IXR_Client {
     }
 
     /** @inheritdoc */
-    public function query() {
+    public function query(...$args) {
         $ok = call_user_func_array('parent::query', func_get_args());
-        $code = $this->getErrorCode();
-        if($code === -32300) $code = -1 * $this->status; // use http status on transport errors
+        $code = @$this->getErrorCode();
+        $http = $this->getHTTPClient();
+        if($code === -32300) $code = -1 * $http->status; // use http status on transport errors
         if(!$ok) {
             // when a file context is given include it in the exception
             if($this->filecontext) {

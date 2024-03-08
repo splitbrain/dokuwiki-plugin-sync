@@ -278,7 +278,7 @@ jQuery(function () {
      */
     function error(error) {
         var $err = jQuery('<div class="error">');
-        $err.text(error);
+        $err.text(error.responseText);
         $output.append($err);
     }
 
