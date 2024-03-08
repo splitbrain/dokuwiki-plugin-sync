@@ -1,10 +1,4 @@
 <?php
-// must be run within Dokuwiki
-if(!defined('DOKU_INC')) die();
-if(!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
-require_once(DOKU_PLUGIN.'admin.php');
-
-require_once(DOKU_INC.'inc/IXR_Library.php');
 
 /**
  * All DokuWiki plugins to extend the admin function
@@ -21,20 +15,27 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     /**
      * Constructor.
      */
-    function admin_plugin_sync(){
+    function __construct(){
         $this->_profileLoad();
         $this->profno = preg_replace('/[^0-9]+/','',$_REQUEST['no']);
     }
 
     function _connect(){
         if(!is_null($this->client)) return true;
-        $this->client = new IXR_Client($this->profiles[$this->profno]['server']);
+
         if ( isset($this->profiles[$this->profno]['timeout']) ){
           $timeout = (int) $this->profiles[$this->profno]['timeout'];
         } else {
           $timeout = $this->defaultTimeout;
         }
-        $this->client->timeout = $timeout;
+
+        if(class_exists('IXR_Client')) {
+            $this->client = new IXR_Client($this->profiles[$this->profno]['server'], false, 80, $timeout);
+        }
+        else {
+            $this->client = new dokuwiki\Remote\IXR\Client($this->profiles[$this->profno]['server']);
+            $this->client->timeout = $timeout;
+        }
 
         // do the login
         if($this->profiles[$this->profno]['user']){
