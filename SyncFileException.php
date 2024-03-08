@@ -28,6 +28,6 @@ class SyncFileException extends SyncException {
 
         // append file name
         $message = $message . ' ' . $id;
-        parent::__construct($message, $code);
+        parent::__construct(html_entity_decode($message), $code);
     }
 }
