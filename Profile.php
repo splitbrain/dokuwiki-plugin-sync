@@ -2,6 +2,8 @@
 
 namespace dokuwiki\plugin\sync;
 
+use dokuwiki\Utf8\Sort;
+
 class Profile {
 
     const DIR_PULL = -1;
@@ -261,13 +263,14 @@ class Profile {
      */
     protected function fetchRemoteFileList($type) {
         if($type === self::TYPE_PAGES) {
-            $cmd = 'dokuwiki.getPagelist';
+            $cmd = 'core.listPages';
         } else {
-            $cmd = 'wiki.getAttachments';
+            $cmd = 'core.listMedia';
         }
 
-        $this->client->query($cmd, $this->config['ns'], $this->syncoptions);
-        $remote = $this->client->getResponse();
+        $this->client->query($cmd, $this->config['ns'], $this->syncoptions['depth'], $this->syncoptions['hash']);
+        $remote = @$this->client->getResponse();
+        $http = $this->client->getHTTPClient();
 
         // put into synclist
         foreach($remote as $item) {
@@ -308,7 +311,11 @@ class Profile {
      * @return mixed
      */
     protected function itemEnhance($item) {
-        $item['info'] = dformat($item['mtime']) . '<br />' . filesize_h($item['size']);
+        if(isset($item['mtime'])) {
+            $item['info'] = dformat($item['mtime']) . '<br />' . filesize_h($item['size']);
+        } else {
+            $item['info'] = dformat($item['revision']) . '<br />' . filesize_h($item['size']);
+        }
         return $item;
     }
 
@@ -317,42 +324,47 @@ class Profile {
      */
     protected function consolidateSyncList() {
         // synctimes
-        $ltime = (int) $this->config['ltime'];
-        $rtime = (int) $this->config['rtime'];
-        $letime = (int) $this->config['letime'];
-        $retime = (int) $this->config['retime'];
+        $ltime = isset($this->config['ltime']) ? (int) $this->config['ltime'] : null;
+        $rtime = isset($this->config['rtime']) ? (int) $this->config['rtime'] : null;
+        $letime = isset($this->config['letime']) ? (int) $this->config['letime'] : null;
+        $retime = isset($this->config['retime']) ? (int) $this->config['retime'] : null;
 
         foreach([self::TYPE_PAGES, self::TYPE_MEDIA] as $type) {
             foreach($this->synclist[$type] as $id => $item) {
                 // no sync if hashes match
-                if($item['remote']['hash'] == $item['local']['hash']) {
-                    unset($this->synclist[$type][$id]);
-                    continue;
+                if(isset($item['remote']['hash']) && isset($item['local']['hash'])) {
+                    if($item['remote']['hash'] == $item['local']['hash']) {
+                        unset($this->synclist[$type][$id]);
+                        continue;
+                    }
                 }
 
                 // check direction
                 $dir = self::DIR_NONE;
                 if($ltime && $rtime) { // synced before
-                    if($item['remote']['mtime'] > $rtime &&
-                        $item['local']['mtime'] <= $letime
-                    ) {
-                        $dir = self::DIR_PULL;
-                    }
-                    if($item['remote']['mtime'] <= $retime &&
-                        $item['local']['mtime'] > $ltime
-                    ) {
-                        $dir = self::DIR_PUSH;
+                    if(isset($item['local']['mtime']) && isset($item['remote']['revision'])) {
+                        if($item['remote']['revision'] > $rtime &&
+                            $item['local']['mtime'] <= $letime
+                        ) {
+                            $dir = self::DIR_PULL;
+                        }
+                        if($item['remote']['revision'] <= $retime &&
+                            $item['local']['mtime'] > $ltime
+                        ) {
+                            $dir = self::DIR_PUSH;
+                        }
                     }
                 } else { // never synced
-                    if(!$item['local']['mtime'] && $item['remote']['mtime']) {
+                    if(!isset($item['local']['mtime']) && $item['remote']['revision']) {
                         $dir = self::DIR_PULL;
                     }
-                    if($item['local']['mtime'] && !$item['remote']['mtime']) {
+                    if($item['local']['mtime'] && !isset($item['remote']['revision'])) {
                         $dir = self::DIR_PUSH;
                     }
                 }
                 $this->synclist[$type][$id]['dir'] = $dir;
             }
+            Sort::ksort($this->synclist[$type]);
         }
     }
 
