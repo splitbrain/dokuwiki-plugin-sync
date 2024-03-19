@@ -17,8 +17,7 @@ class Client extends \IXR_Client {
      * @param int $timeout
      */
     public function __construct($server, $user, $pass, $timeout = 15) {
-        parent::__construct($server);
-        $this->timeout = $timeout;
+        parent::__construct($server, $path = false, $port = 80, $timeout);
         $this->login($user, $pass);
     }
 
