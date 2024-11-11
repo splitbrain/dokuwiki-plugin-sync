@@ -2,6 +2,8 @@
 
 namespace dokuwiki\plugin\sync;
 
+use dokuwiki\Utf8\Sort;
+
 class Profile {
 
     const DIR_PULL = -1;
@@ -361,6 +363,7 @@ class Profile {
                 }
                 $this->synclist[$type][$id]['dir'] = $dir;
             }
+            Sort::ksort($this->synclist[$type]);
         }
     }
 
