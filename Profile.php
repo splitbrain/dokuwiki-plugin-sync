@@ -2,8 +2,6 @@
 
 namespace dokuwiki\plugin\sync;
 
-use dokuwiki\Utf8\Sort;
-
 class Profile {
 
     const DIR_PULL = -1;
@@ -270,7 +268,6 @@ class Profile {
 
         $this->client->query($cmd, $this->config['ns'], $this->syncoptions['depth'], $this->syncoptions['hash']);
         $remote = @$this->client->getResponse();
-        $http = $this->client->getHTTPClient();
 
         // put into synclist
         foreach($remote as $item) {
@@ -358,13 +355,12 @@ class Profile {
                     if(!isset($item['local']['mtime']) && $item['remote']['revision']) {
                         $dir = self::DIR_PULL;
                     }
-                    if($item['local']['mtime'] && !isset($item['remote']['revision'])) {
+                    if((isset($item['local']['mtime']) && $item['local']['mtime']) && !isset($item['remote']['revision'])) {
                         $dir = self::DIR_PUSH;
                     }
                 }
                 $this->synclist[$type][$id]['dir'] = $dir;
             }
-            Sort::ksort($this->synclist[$type]);
         }
     }
 

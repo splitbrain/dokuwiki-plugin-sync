@@ -32,6 +32,7 @@ jQuery(function () {
             });
         });
         $output.append($table);
+        jQuery('input[name="dir"]').click(function(){ sync_select(this.value); });
 
         var $lbl = jQuery('<label>');
         $lbl.text(LANG.plugins.sync.summary + ': ');
@@ -59,6 +60,12 @@ jQuery(function () {
             var $th = jQuery('<th>');
             $th.addClass(l);
             $th.text(LANG.plugins.sync[l]);
+            if(l == 'dir') {
+                $th.append('<br>');
+                $th.append('<label class="push"><input type="radio" name="dir" value="1" title="' + LANG.plugins.sync['push'] + '"></label>');
+                $th.append('<label class="skip"><input type="radio" name="dir" value="0" title="' + LANG.plugins.sync['skip'] + '"></label>');
+                $th.append('<label class="pull"><input type="radio" name="dir" value="-1" title="' + LANG.plugins.sync['pull'] + '"></label>');
+            }
             $tr.append($th);
         });
         return $tr;
@@ -175,6 +182,24 @@ jQuery(function () {
         }
 
         return $html;
+    }
+
+    function sync_select(type) {
+        switch(type) {
+            case "1":
+                type = "push";
+                break;
+            case "0":
+                type = "skip";
+                break;
+            case "-1":
+                type = "pull";
+                break;
+        }
+        const types = ["push", "skip", "pull"];
+        if(types.includes(type)) {
+            jQuery('label[class='+type+'] input').prop('checked',true);
+        }
     }
 
     /**
