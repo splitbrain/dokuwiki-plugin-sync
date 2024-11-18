@@ -33,6 +33,7 @@ class Profile {
         $this->config = $config;
 
         $this->syncoptions = [
+            'pattern' => '',
             'depth' => (int) $config['depth'],
             'hash' => true,
         ];
@@ -264,11 +265,12 @@ class Profile {
     protected function fetchRemoteFileList($type) {
         if($type === self::TYPE_PAGES) {
             $cmd = 'core.listPages';
+            $this->client->query($cmd, $this->config['ns'], $this->syncoptions['depth'], $this->syncoptions['hash']);
         } else {
             $cmd = 'core.listMedia';
+            $this->client->query($cmd, $this->config['ns'], $this->syncoptions['pattern'], $this->syncoptions['depth'], $this->syncoptions['hash']);
         }
 
-        $this->client->query($cmd, $this->config['ns'], $this->syncoptions['depth'], $this->syncoptions['hash']);
         $remote = @$this->client->getResponse();
 
         // put into synclist

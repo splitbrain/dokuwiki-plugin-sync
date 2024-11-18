@@ -32,7 +32,7 @@ jQuery(function () {
             });
         });
         $output.append($table);
-        jQuery('input[name="dir"]').click(function(){ sync_select(this.value); });
+        jQuery('input[name="dir"]').click(function(e){ sync_select(this.value); this.value = 0; });
 
         var $lbl = jQuery('<label>');
         $lbl.text(LANG.plugins.sync.summary + ': ');
@@ -218,6 +218,7 @@ jQuery(function () {
                 SYNC_DATA.items.push([id, type, dir]);
             }
         });
+        SYNC_DATA.items = SYNC_DATA.items.reverse();
 
         SYNC_DATA.summary = $sum.val();
 
