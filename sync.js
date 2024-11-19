@@ -208,7 +208,7 @@ jQuery(function () {
     function beginsync() {
         SYNC_DATA.items = [];
 
-        $output.find('tr').each(function (idx, tr) {
+        $output.find('tr[class^="type"]').each(function (idx, tr) {
             var $tr = jQuery(tr);
             var id = $tr.find('td').first().text();
             var dir = parseInt($tr.find('input:checked').val(), 10);
