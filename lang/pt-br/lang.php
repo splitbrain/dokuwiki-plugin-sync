@@ -40,6 +40,9 @@ $lang['noconnect']     = 'Não foi possível conectar-se ao wiki remoto:';
 $lang['lockfail']      = 'não foi possível bloquear e irá pular:';
 $lang['localdelfail']  = 'falha na exclusão local:';
 
+$lang['profilesaved'] = 'perfil salvo.';
+$lang['profiledeleted'] = 'perfil excluído.';
+
 $lang['js']['list']   = 'Uma lista de arquivos que diferem entre o wiki local e o remoto é mostrada abaixo. Você precisa decidir quais revisões deseja manter.'; #from list.txt
 
 $lang['js']['file']   = 'Página ou Arquivo de Mídia';

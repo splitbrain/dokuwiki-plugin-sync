@@ -55,11 +55,11 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                 $this->profileManager->deleteProfileConfig($this->profno);
                 $this->profno = false;
                 $INPUT->remove('prf');
-                msg('profile deleted', 1);
+                msg($this->getLang('profiledeleted'), 1);
             } else {
                 // profile add/edit
                 $this->profno = $this->profileManager->setProfileConfig($this->profno, $profile);
-                msg('profile saved', 1);
+                msg($this->getLang('profilesaved'), 1);
             }
         } catch(SyncException $e) {
             msg(hsc($e->getMessage()), -1);
