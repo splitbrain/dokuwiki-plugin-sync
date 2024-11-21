@@ -295,9 +295,16 @@ class Profile {
             $cmd = 'search_media';
         }
 
+        $syncoptions = $this->syncoptions;
+        if($type === self::TYPE_PAGES) {
+            if($syncoptions['depth']) {
+                $syncoptions['depth'] += substr_count($this->config['ns'], ':') + 1;
+            }
+        }
+
         $local = array();
         $dir = utf8_encodeFN(str_replace(':', '/', $this->config['ns']));
-        search($local, $basedir, $cmd, $this->syncoptions, $dir);
+        search($local, $basedir, $cmd, $syncoptions, $dir);
 
         // put into synclist
         foreach($local as $item) {
