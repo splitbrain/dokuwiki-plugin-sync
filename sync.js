@@ -32,6 +32,7 @@ jQuery(function () {
             });
         });
         $output.append($table);
+        jQuery('input[name="dir"]').click(function(e){ sync_select(this.value); this.value = 0; });
 
         var $lbl = jQuery('<label>');
         $lbl.text(LANG.plugins.sync.summary + ': ');
@@ -59,6 +60,12 @@ jQuery(function () {
             var $th = jQuery('<th>');
             $th.addClass(l);
             $th.text(LANG.plugins.sync[l]);
+            if(l == 'dir') {
+                $th.append('<br>');
+                $th.append('<label class="push"><input type="radio" name="dir" value="1" title="' + LANG.plugins.sync['push'] + '"></label>');
+                $th.append('<label class="skip"><input type="radio" name="dir" value="0" title="' + LANG.plugins.sync['skip'] + '"></label>');
+                $th.append('<label class="pull"><input type="radio" name="dir" value="-1" title="' + LANG.plugins.sync['pull'] + '"></label>');
+            }
             $tr.append($th);
         });
         return $tr;
@@ -177,13 +184,31 @@ jQuery(function () {
         return $html;
     }
 
+    function sync_select(type) {
+        switch(type) {
+            case "1":
+                type = "push";
+                break;
+            case "0":
+                type = "skip";
+                break;
+            case "-1":
+                type = "pull";
+                break;
+        }
+        const types = ["push", "skip", "pull"];
+        if(types.includes(type)) {
+            jQuery('label[class='+type+'] input').prop('checked',true);
+        }
+    }
+
     /**
      * Start the sync process
      */
     function beginsync() {
         SYNC_DATA.items = [];
 
-        $output.find('tr').each(function (idx, tr) {
+        $output.find('tr[class^="type"]').each(function (idx, tr) {
             var $tr = jQuery(tr);
             var id = $tr.find('td').first().text();
             var dir = parseInt($tr.find('input:checked').val(), 10);
@@ -193,6 +218,7 @@ jQuery(function () {
                 SYNC_DATA.items.push([id, type, dir]);
             }
         });
+        SYNC_DATA.items = SYNC_DATA.items.reverse();
 
         SYNC_DATA.summary = $sum.val();
 
@@ -278,7 +304,7 @@ jQuery(function () {
      */
     function error(error) {
         var $err = jQuery('<div class="error">');
-        $err.text(error);
+        $err.text(error.responseText);
         $output.append($err);
     }
 

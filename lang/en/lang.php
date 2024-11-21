@@ -40,6 +40,9 @@ $lang['noconnect']     = 'Could not connect to remote wiki:';
 $lang['lockfail']      = 'couldn\'t lock and will skip:';
 $lang['localdelfail']  = 'local delete failed:';
 
+$lang['profilesaved'] = 'profile saved.';
+$lang['profiledeleted'] = 'profile deleted.';
+
 $lang['js']['list']   = 'A list of files that differ between your local and the remote wiki is shown below. You need to decide which revisions you want to keep.'; #from list.txt
 
 $lang['js']['file']   = 'Page or Media File';

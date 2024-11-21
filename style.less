@@ -47,7 +47,7 @@
 
         th.dir,
         td.dir {
-            width: 6em;
+            width: 8.6em;
         }
 
         th.local,
@@ -106,6 +106,24 @@
             }
             &:checked::before {
                 content: url(pix/arrow-left-bold-circle.svg);
+            }
+        }
+        
+        th.dir > label.push input {
+            &:checked::before {
+                content: url(pix/arrow-right-bold-circle-outline.svg);
+            }
+        }
+
+        th.dir > label.skip input {
+            &:checked::before {
+                content: url(pix/pause-circle-outline.svg);
+            }
+        }
+
+        th.dir > label.pull input {
+            &:checked::before {
+                content: url(pix/arrow-left-bold-circle-outline.svg);
             }
         }
     }

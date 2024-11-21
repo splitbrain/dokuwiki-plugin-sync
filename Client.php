@@ -17,16 +17,16 @@ class Client extends \IXR_Client {
      * @param int $timeout
      */
     public function __construct($server, $user, $pass, $timeout = 15) {
-        parent::__construct($server);
-        $this->timeout = $timeout;
+        parent::__construct($server, $path = false, $port = 80, $timeout);
         $this->login($user, $pass);
     }
 
     /** @inheritdoc */
-    public function query() {
+    public function query(...$args) {
         $ok = call_user_func_array('parent::query', func_get_args());
-        $code = $this->getErrorCode();
-        if($code === -32300) $code = -1 * $this->status; // use http status on transport errors
+        $code = @$this->getErrorCode();
+        $http = $this->getHTTPClient();
+        if($code === -32300) $code = -1 * $http->status; // use http status on transport errors
         if(!$ok) {
             // when a file context is given include it in the exception
             if($this->filecontext) {
