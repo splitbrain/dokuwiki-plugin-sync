@@ -1,0 +1,3 @@
+====== Arquivos para Sincronizar ======
+
+Uma lista de arquivos que diferem entre seu wiki local e remoto é mostrada abaixo. Você precisa decidir quais revisões deseja manter.
