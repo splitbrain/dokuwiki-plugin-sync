@@ -1,0 +1,4 @@
+====== Súbory na synchronizáciu ======
+
+Nižšie je zoznam súborov, ktoré sa líšia medzi vašou lokálnou a vzdialenou wiki. Musíte rozhodnúť, ktoré revízie chcete ponechať.
+

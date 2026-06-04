@@ -1,0 +1,4 @@
+====== Synchronizácia wiki ======
+
+Tento nástroj umožňuje synchronizovať obsah vašej wiki s inými wiki. Cez synchronizačné profily je možné nastaviť viacero iných wiki. Synchronizáciu možno obmedziť na určité menné priestory.
+

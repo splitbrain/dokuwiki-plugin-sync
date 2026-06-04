@@ -1,0 +1,4 @@
+====== Synchronizácia... ======
+
+Proces synchronizácie bol spustený. Priebeh sledujte nižšie.
+
