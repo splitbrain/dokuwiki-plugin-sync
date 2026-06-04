@@ -1,0 +1,5 @@
+====== Wiki sú synchronizované ======
+
+Medzi vašou lokálnou a vzdialenou wiki sa nenašli žiadne rozdiely. Synchronizácia nie je potrebná.
+
+
