@@ -30,16 +30,17 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         }
 
         if(class_exists('IXR_Client')) {
-            $this->client = new IXR_Client($this->profiles[$this->profno]['server'], false, 80, $timeout);
+            $this->client = new IXR_Client(
+                $this->profiles[$this->profno]['server'], false, 80, $timeout);
         }
         else {
-            $this->client = new dokuwiki\Remote\IXR\Client($this->profiles[$this->profno]['server']);
-            $this->client->timeout = $timeout;
+            $this->client = new dokuwiki\Remote\IXR\Client(
+                $this->profiles[$this->profno]['server'], false, 80, $timeout);
         }
 
         // do the login
         if($this->profiles[$this->profno]['user']){
-            $ok = $this->client->query('dokuwiki.login',
+            $ok = $this->client->query('core.login',
                     $this->profiles[$this->profno]['user'],
                     $this->profiles[$this->profno]['pass']
                   );
@@ -55,7 +56,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             }
         }
 
-        $ok = $this->client->query('dokuwiki.getXMLRPCAPIVersion');
+        $ok = $this->client->query('core.getAPIVersion');
         if(!$ok){
             msg($this->getLang('xmlerr').' '.hsc($this->client->getErrorMessage()),-1);
             $this->client = null;
@@ -74,7 +75,8 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     /**
      * return sort order for position in admin menu
      */
-    function getMenuSort() {
+    function getMenuSort(): int
+    {
         return 1020;
     }
 
@@ -219,7 +221,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         global $conf;
         $no = $this->profno;
 
-        $ok = $this->client->query('dokuwiki.getVersion');
+        $ok = $this->client->query('core.getWikiVersion');
         $version = '';
         if($ok) $version = $this->client->getResponse();
 
@@ -356,7 +358,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             }
         }
         // lock remote files
-        $ok = $this->client->query('dokuwiki.setLocks',array('lock'=>$lock,'unlock'=>array()));
+        $ok = $this->client->query('core.lockPages', $lock);
         if(!$ok){
             $this->_listOut('failed RPC communication');
             $synclist = array();
@@ -417,9 +419,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             if($dir == -1){
                 //pull
                 if($type == 'pages'){
-                    $ok = $this->client->query('wiki.getPage',$id);
+                    $ok = $this->client->query('core.getPage',$id);
                 }else{
-                    $ok = $this->client->query('wiki.getAttachment',$id);
+                    $ok = $this->client->query('core.getMedia',$id);
                 }
                 if(!$ok){
                     $this->_listOut($this->getLang('pullfail').' '.$id.' '.
@@ -431,9 +433,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                     saveWikiText($id,$data,$sum,false);
                     idx_addPage($id);
                 }else{
-                    if($this->apiversion < 7){
-                        $data = base64_decode($data);
-                    }
+                    $data = base64_decode($data);
                     io_saveFile(mediaFN($id),$data);
                 }
                 $this->_listOut($this->getLang('pullok').' '.$id,'pull_okay');
@@ -443,15 +443,11 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
                 // push
                 if($type == 'pages'){
                     $data = rawWiki($id);
-                    $ok = $this->client->query('wiki.putPage',$id,$data,array('sum'=>$sum));
+                    $ok = $this->client->query('core.savePage',$id,$data,$sum);
                 }else{
                     $data = io_readFile(mediaFN($id),false);
-                    if($this->apiversion < 6){
-                        $data = base64_encode($data);
-                    }else{
-                        $data = new IXR_Base64($data);
-                    }
-                    $ok = $this->client->query('wiki.putAttachment',$id,$data,array('ow'=>true));
+                    $data = base64_encode($data);
+                    $ok = $this->client->query('core.saveMedia',$id,$data,true);
                 }
                 if(!$ok){
                     $this->_listOut($this->getLang('pushfail').' '.$id.' '.
@@ -464,9 +460,9 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             if($dir == 2){
                 // remote delete
                 if($type == 'pages'){
-                    $ok = $this->client->query('wiki.putPage',$id,'',array('sum'=>$sum));
+                    $ok = $this->client->query('core.savePage',$id,'',$sum);
                 }else{
-                    $ok = $this->client->query('wiki.deleteAttachment',$id);
+                    $ok = $this->client->query('core.deleteMedia',$id);
                 }
                 if(!$ok){
                     $this->_listOut($this->getLang('remotedelfail').' '.$id.' '.
@@ -483,7 +479,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             foreach((array) $synclist as $id => $dir){
                 unlock($id);
             }
-            $this->client->query('dokuwiki.setLocks',array('lock'=>array(),'unlock'=>$lock));
+            $this->client->query('core.unlockPages', $lock);
         }
 
 
@@ -555,19 +551,19 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             // check direction
             $dir = 0;
             if($ltime && $rtime){ // synced before
-                if($item['remote']['mtime'] > $rtime &&
+                if($item['remote']['revision'] > $rtime &&
                    $item['local']['mtime'] <= $letime){
                     $dir = -1;
                 }
-                if($item['remote']['mtime'] <= $retime &&
+                if($item['remote']['revision'] <= $retime &&
                    $item['local']['mtime'] > $ltime){
                     $dir = 1;
                 }
             }else{ // never synced
-                if(!$item['local']['mtime'] && $item['remote']['mtime']){
+                if(!$item['local']['mtime'] && $item['remote']['revision']){
                     $dir = -1;
                 }
-                if($item['local']['mtime'] && !$item['remote']['mtime']){
+                if($item['local']['mtime'] && !$item['remote']['revision']){
                     $dir = 1;
                 }
             }
@@ -606,7 +602,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
             if(!isset($item['remote'])){
                 echo '&mdash;';
             }else{
-                echo '<div>'.strftime($conf['dformat'],$item['remote']['mtime']).'</div>';
+                echo '<div>'.strftime($conf['dformat'],$item['remote']['revision']).'</div>';
                 echo ' <div>('.$item['remote']['size'].' bytes)</div>';
             }
             echo '</td>';
@@ -627,7 +623,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
     function _getTimes(){
         if(!$this->_connect()) return false;
         // get remote time
-        $ok = $this->client->query('dokuwiki.getTime');
+        $ok = $this->client->query('core.getWikiTime');
         if(!$ok){
             msg('Failed to fetch remote time. '.
                 $this->client->getErrorMessage(),-1);
@@ -650,13 +646,11 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
 
         // get remote file list
         if($type == 'pages'){
-            $ok = $this->client->query('dokuwiki.getPagelist',$ns,
-                    array('depth' => (int) $this->profiles[$no]['depth'],
-                          'hash' => true));
+            $ok = $this->client->query('core.listPages', $ns,
+                    (int) $this->profiles[$no]['depth'], true);
         }else{
-            $ok = $this->client->query('wiki.getAttachments',$ns,
-                    array('depth' => (int) $this->profiles[$no]['depth'],
-                          'hash' => true));
+            $ok = $this->client->query('core.listMedia', $ns,
+                    '',(int) $this->profiles[$no]['depth'], true);
         }
         if(!$ok){
             msg('Failed to fetch remote file list. '.
@@ -666,8 +660,10 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         $remote = $this->client->getResponse();
         // put into synclist
         foreach($remote as $item){
-            $list[$item['id']]['remote'] = $item;
-            unset($list[$item['id']]['remote']['id']);
+            $item_id = $item['id'];
+            if ($conf['fnencode'] == 'utf-8')
+                $item_id = normalizer_normalize($item_id);
+            $list[$item_id]['remote'] = $item;
         }
         unset($remote);
 
@@ -688,13 +684,15 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         // put into synclist
         foreach($local as $item){
             // skip identical files
-            if($list[$item['id']]['remote']['hash'] == $item['hash']){
-                unset($list[$item['id']]);
+            $item_id = $item['id'];
+            if ($conf['fnencode'] == 'utf-8')
+                $item_id = normalizer_normalize($item_id);
+            if( $list[$item_id]['remote']['hash'] == $item['hash']){
+                unset($list[$item_id]);
                 continue;
             }
 
-            $list[$item['id']]['local'] = $item;
-            unset($list[$item['id']]['local']['id']);
+            $list[$item_id]['local'] = $item;
         }
         unset($local);
 
@@ -709,7 +707,7 @@ class admin_plugin_sync extends DokuWiki_Admin_Plugin {
         if(!$this->_connect()) return false;
         $no = $this->profno;
 
-        $ok = $this->client->query('wiki.getPage',$id);
+        $ok = $this->client->query('core.getPage',$id);
         if(!$ok){
             echo $this->getLang('pullfail').' '.hsc($id).' ';
             echo hsc($this->client->getErrorMessage());
